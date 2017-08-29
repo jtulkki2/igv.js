@@ -143,59 +143,67 @@ var igv = (function (igv) {
 
             mousedown: function (e) {
 
-                e.preventDefault();
-                e.stopPropagation();
+                if (true === e.shiftKey) {
 
-                self.$viewportContent.off();
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                self.$viewportContent.on({
-                    mousedown: function (e) {
+                    self.$viewportContent.off();
 
-                        e.preventDefault();
-                        e.stopPropagation();
+                    self.$viewportContent.on({
+                        mousedown: function (e) {
 
-                        isMouseDown = true;
-                    }
-                });
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                // mouseDownXY = igv.translateMouseCoordinates(e, self.contentDiv);
-                mouseDownXY = { x:e.offsetX, y:e.offsetY };
+                            isMouseDown = true;
+                        }
+                    });
 
-                left = mouseDownXY.x;
-                rulerSweepWidth = 0;
-                self.$rulerSweeper.css({"display": "inline", "left": left + "px", "width": rulerSweepWidth + "px"});
+                    // mouseDownXY = igv.translateMouseCoordinates(e, self.contentDiv);
+                    mouseDownXY = { x:e.offsetX, y:e.offsetY };
 
-                isMouseIn = true;
+                    left = mouseDownXY.x;
+                    rulerSweepWidth = 0;
+                    $('.igv-ruler-sweeper-div').css({ display:"inline", left:(left + 'px'), width:(rulerSweepWidth + 'px') });
+
+                    isMouseIn = true;
+
+                }
             },
 
             mousemove: function (e) {
 
-                e.preventDefault();
-                e.stopPropagation();
+                if (true === e.shiftKey) {
 
-                if (isMouseDown && isMouseIn) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                    // mouseMoveXY = igv.translateMouseCoordinates(e, self.contentDiv);
-                    mouseMoveXY = { x:e.offsetX, y:e.offsetY };
+                    if (isMouseDown && isMouseIn) {
 
-                    dx = mouseMoveXY.x - mouseDownXY.x;
-                    rulerSweepWidth = Math.abs(dx);
+                        // mouseMoveXY = igv.translateMouseCoordinates(e, self.contentDiv);
+                        mouseMoveXY = { x:e.offsetX, y:e.offsetY };
 
-                    if (rulerSweepWidth > rulerSweepThreshold) {
+                        dx = mouseMoveXY.x - mouseDownXY.x;
+                        rulerSweepWidth = Math.abs(dx);
 
-                        self.$rulerSweeper.css({"width": rulerSweepWidth + "px"});
+                        if (rulerSweepWidth > rulerSweepThreshold) {
 
-                        if (dx < 0) {
+                            $('.igv-ruler-sweeper-div').css({ width:(rulerSweepWidth + 'px') });
 
-                            if (mouseDownXY.x + dx < 0) {
-                                isMouseIn = false;
-                                left = 0;
-                            } else {
-                                left = mouseDownXY.x + dx;
+                            if (dx < 0) {
+
+                                if (mouseDownXY.x + dx < 0) {
+                                    isMouseIn = false;
+                                    left = 0;
+                                } else {
+                                    left = mouseDownXY.x + dx;
+                                }
+                                $('.igv-ruler-sweeper-div').css({ left:(left + 'px') });
                             }
-                            self.$rulerSweeper.css({"left": left + "px"});
                         }
                     }
+
                 }
             },
 
@@ -204,27 +212,31 @@ var igv = (function (igv) {
                 var extent,
                     referenceFrame;
 
-                e.preventDefault();
-                e.stopPropagation();
+                if (true === e.shiftKey) {
 
-                if (isMouseDown) {
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                    // End sweep
-                    isMouseDown = false;
-                    isMouseIn = false;
+                    if (isMouseDown) {
 
-                    self.$rulerSweeper.css({ "display": "none", "left": 0 + "px", "width": 0 + "px" });
+                        // End sweep
+                        isMouseDown = false;
+                        isMouseIn = false;
 
-                    referenceFrame = self.genomicState.referenceFrame;
+                        $('.igv-ruler-sweeper-div').css({ display:"none", left:0, width:0 });
 
-                    extent = {};
-                    extent.start = referenceFrame.start + (left * referenceFrame.bpPerPixel);
-                    extent.end = extent.start + rulerSweepWidth * referenceFrame.bpPerPixel;
+                        referenceFrame = self.genomicState.referenceFrame;
 
-                    if (rulerSweepWidth > rulerSweepThreshold) {
-                        igv.Browser.validateLocusExtent(igv.browser.genome.getChromosome(referenceFrame.chrName), extent);
-                        self.viewport.goto(referenceFrame.chrName, extent.start, extent.end);
+                        extent = {};
+                        extent.start = referenceFrame.start + (left * referenceFrame.bpPerPixel);
+                        extent.end = extent.start + rulerSweepWidth * referenceFrame.bpPerPixel;
+
+                        if (rulerSweepWidth > rulerSweepThreshold) {
+                            igv.Browser.validateLocusExtent(igv.browser.genome.getChromosome(referenceFrame.chrName), extent);
+                            self.viewport.goto(referenceFrame.chrName, extent.start, extent.end);
+                        }
                     }
+
                 }
 
             }
