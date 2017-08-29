@@ -54,10 +54,7 @@ var igv = (function (igv) {
 
         this.viewports = this.createViewports(browser.genomicStateList);
 
-        if (this.track instanceof igv.RulerTrack) {
-            this.track.createRulerSweepers(this.viewports);
-        }
-
+        igv.createRulerSweepers.call(this.track, this.viewports);
 
         this.configureViewportContainer(this.$viewportContainer, this.viewports);
 

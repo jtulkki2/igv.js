@@ -39,17 +39,6 @@ var igv = (function (igv) {
 
     };
 
-    igv.RulerTrack.prototype.createRulerSweepers = function (viewports) {
-
-        var self = this;
-
-        this.rulerSweepers = {};
-        _.each(viewports, function (viewport) {
-            self.rulerSweepers[ viewport.genomicState.locusIndex.toString() ] = new igv.RulerSweeper(viewport, viewport.$viewport, $(viewport.contentDiv), viewport.genomicState);
-        });
-
-    };
-
     igv.RulerTrack.prototype.locusLabelWithViewport = function (viewport) {
 
         var locusLabel = $('<div class = "igv-viewport-content-ruler-div">');

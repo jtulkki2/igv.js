@@ -32,6 +32,24 @@ var igv = (function (igv) {
         "gtf", "aneu", "fusionjuncspan", "refflat", "seg", "bed", "vcf", "bb", "bigbed", "bw", "bigwig", "bam", "tdf",
         "refgene", "genepred", "genepredext"]);
 
+    igv.createRulerSweepers = function (viewports) {
+
+        var self = this,
+            doWholeGenome;
+
+        if (this instanceof igv.RulerTrack) {
+            doWholeGenome = true;
+        } else {
+            doWholeGenome = undefined;
+        }
+
+        this.rulerSweepers = {};
+        _.each(viewports, function (viewport) {
+            self.rulerSweepers[ viewport.genomicState.locusIndex.toString() ] = new igv.RulerSweeper(viewport, viewport.$viewport, $(viewport.contentDiv), viewport.genomicState, doWholeGenome);
+        });
+
+    };
+
     igv.getFormat = function (name) {
 
         if (undefined === igv.browser || undefined === igv.browser.formats) {
@@ -279,18 +297,6 @@ var igv = (function (igv) {
         }
     };
 
-    // igv.setTrackColor = function (track, color) {
-    //
-    //     track.color = color;
-    //
-    //     if (track.trackView) {
-    //
-    //         track.trackView.repaint();
-    //
-    //     }
-    //
-    // };
-
     igv.paintAxis = function (ctx, pixelWidth, pixelHeight) {
 
         var x1,
@@ -459,7 +465,6 @@ var igv = (function (igv) {
 
         return all;
     };
-
 
     igv.trackMenuItemListHelper = function(itemList) {
 

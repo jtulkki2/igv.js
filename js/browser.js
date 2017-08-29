@@ -871,6 +871,7 @@ var igv = (function (igv) {
         $('.igv-ruler-sweeper-div').remove();
 
         _.each(this.trackViews, function(trackView){
+
             trackView.viewports = [];
             trackView.scrollbar = undefined;
 
@@ -885,21 +886,16 @@ var igv = (function (igv) {
 
     igv.Browser.prototype.buildViewportsWithGenomicStateList = function (genomicStateList) {
 
+        var self = this;
+
         _.each(this.trackViews, function(trackView){
 
-            trackView.createViewports(genomicStateList);
+            trackView.viewports = trackView.createViewports(self.genomicStateList);
 
-            // _.each(genomicStateList, function(genomicState, i) {
-            //
-            //     trackView.viewports.push(new igv.Viewport(trackView, trackView.$viewportContainer, i));
-            //
-            //     if (trackView.track instanceof igv.RulerTrack) {
-            //         trackView.track.createRulerSweeper(trackView.viewports[i], trackView.viewports[i].$viewport, $(trackView.viewports[i].contentDiv), genomicState);
-            //     }
-            //
-            // });
+            igv.createRulerSweepers.call(trackView.track, trackView.viewports);
 
             trackView.configureViewportContainer(trackView.$viewportContainer, trackView.viewports);
+
         });
 
     };

@@ -25,7 +25,7 @@
  */
 var igv = (function (igv) {
 
-    igv.RulerSweeper = function (viewport, $viewport, $viewportContent, genomicState) {
+    igv.RulerSweeper = function (viewport, $viewport, $viewportContent, genomicState, doWholeGenome) {
 
         this.viewport = viewport;
         this.$viewport = $viewport;
@@ -35,7 +35,9 @@ var igv = (function (igv) {
         this.$rulerSweeper = $('<div class="igv-ruler-sweeper-div">');
         this.$viewportContent.append(this.$rulerSweeper);
 
-        this.wholeGenomeLayout(this.$viewportContent.find('.igv-whole-genome-container'));
+        if (true === doWholeGenome) {
+            this.wholeGenomeLayout(this.$viewportContent.find('.igv-whole-genome-container'));
+        }
 
         this.addMouseHandlers();
     };
