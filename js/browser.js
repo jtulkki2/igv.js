@@ -969,48 +969,25 @@ var igv = (function (igv) {
 
         $(trackContainerDiv).mousemove(igv.throttle(function (e) {
 
-            var coords = igv.translateMouseCoordinates(e, trackContainerDiv),
-                maxEnd,
-                maxStart,
-                referenceFrame = igv.browser.referenceFrame;
+            var coords = igv.translateMouseCoordinates(e, trackContainerDiv);
 
             if (isRulerTrack) {
                 return;
             }
 
-            if (!referenceFrame) {
+            if (!igv.browser.referenceFrame) {
                 return;
             }
 
             if (isMouseDown) { // Possibly dragging
 
                 if (mouseDownX && Math.abs(coords.x - mouseDownX) > igv.browser.constants.dragThreshold) {
-
                     if (igv.browser.loadInProgress()) {
                         // ignore
                         return;
                     }
-
                     isDragging = true;
-
-                    referenceFrame.shiftPixels(lastMouseX - coords.x);
-
-                    // clamp left
-                    referenceFrame.start = Math.max(0, referenceFrame.start);
-
-                    // clamp right
-                    var chromosome = igv.browser.genome.getChromosome(referenceFrame.chr);
-                    maxEnd = chromosome.bpLength;
-                    maxStart = maxEnd - igv.browser.trackViewportWidth() * referenceFrame.bpPerPixel;
-
-
-                    if (referenceFrame.start > maxStart) referenceFrame.start = maxStart;
-
-                    igv.browser.updateLocusSearch(referenceFrame);
-
-
-                    igv.browser.repaint();
-                    igv.browser.fireEvent('trackdrag');
+                    scrollFrame(lastMouseX - coords.x);
                 }
 
                 lastMouseX = coords.x;
@@ -1022,6 +999,48 @@ var igv = (function (igv) {
         $(trackContainerDiv).mouseup(mouseUpOrOut);
 
         $(trackContainerDiv).mouseleave(mouseUpOrOut);
+
+        // Added by JT 2017/10/17
+        $(trackContainerDiv).bind('wheel', function(e) {
+            var event = e.originalEvent;
+
+            if (igv.browser.loadInProgress()) {
+                // ignore
+                return;
+            }
+            scrollFrame(event.deltaX);
+            event.stopPropagation;
+        });
+
+        function scrollFrame(change) {
+            var maxEnd,
+                maxStart,
+                referenceFrame = igv.browser.referenceFrame;
+
+            if (!igv.browser.referenceFrame || igv.browser.loadInProgress()) {
+                // ignore
+                return;
+            }
+
+            referenceFrame.shiftPixels(change);
+
+            // clamp left
+            referenceFrame.start = Math.max(0, referenceFrame.start);
+
+            // clamp right
+            var chromosome = igv.browser.genome.getChromosome(referenceFrame.chr);
+            maxEnd = chromosome.bpLength;
+            maxStart = maxEnd - igv.browser.trackViewportWidth() * referenceFrame.bpPerPixel;
+
+
+            if (referenceFrame.start > maxStart) referenceFrame.start = maxStart;
+
+            igv.browser.updateLocusSearch(referenceFrame);
+
+
+            igv.browser.repaint();
+            igv.browser.fireEvent('trackdrag');
+        }
 
         function mouseUpOrOut(e) {
 

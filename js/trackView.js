@@ -171,6 +171,10 @@ var igv = (function (igv) {
             this.scrollbar = new TrackScrollbar(this.viewportDiv, this.contentDiv);
             this.scrollbar.update();
             $(this.viewportDiv).append(this.scrollbar.outerScrollDiv);
+            // Added by JT 2017/10/17
+            $(this.viewportDiv).bind( 'wheel', function (e) {
+                self.scrollbar.scroll(e.originalEvent.deltaY);
+            });
         }
 
         //if (this.track instanceof igv.WIGTrack) {
@@ -709,6 +713,16 @@ var igv = (function (igv) {
         this.contentDiv = contentDiv;
         this.outerScrollDiv = outerScrollDiv;
         this.innerScrollDiv = innerScrollDiv;
+        // Added by JT 2017/10/17
+        this.scroll = function (change) {
+            var ratio = $(viewportDiv).height() / $(contentDiv).height();
+
+            if (ratio < 1) {
+                var dist = Math.round(ratio * change),
+                    newY = $(innerScrollDiv).position().top + dist;
+                moveScrollerTo(newY);
+            }
+        }
 
 
         $(this.innerScrollDiv).mousedown(function (event) {
