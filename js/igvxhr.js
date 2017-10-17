@@ -64,6 +64,18 @@ var igvxhr = (function (igvxhr) {
                     url += url.includes("?") ? "&" : "?";
                     url += "someRandomSeed=" + Math.random().toString(36);
                 }
+            } else if (url.indexOf('https://s3.amazonaws.com/') == 0) {
+                if (range) {
+                    // Hack to prevent caching on Chrome
+                    url += url.includes("?") ? "&" : "?";
+                    url += 'someRandomSeed=' + Math.random().toString(36);
+                }
+            } else {
+                if (range) {
+                    // Hack to prevent caching on Chrome
+                    url += url.includes("?") ? "&" : "?";
+                    url += 'someRandomSeed=1';
+                }
             }
 
             xhr.open(method, url);
