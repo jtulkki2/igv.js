@@ -1224,8 +1224,11 @@ var igv = (function (igv) {
         }
 
         var scope = thisObj || window;
-        for (var i = 0, l = this.eventHandlers[eventName].length; i < l; i++) {
-            var item = this.eventHandlers[eventName][i];
+        // Fix by JT 13.6.2017: prevent event handler list changes causing trouble
+        var handlers = this.eventHandlers[eventName].slice();
+
+        for (var i = 0, l = handlers.length; i < l; i++) {
+            var item = handlers[i];
             var result = item.apply(scope, args);
 
             // If any of the handlers return any value, then return it
