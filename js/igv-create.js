@@ -55,6 +55,12 @@ var igv = (function (igv) {
 
         setDefaults(config);
 
+        igv.handleError = function(error) {
+            if (config.onError) {
+                config.onError(error);
+            }
+        }
+
         oauth.google.apiKey = config.apiKey;
         oauth.google.access_token = config.oauthToken;
 

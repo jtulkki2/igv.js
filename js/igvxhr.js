@@ -167,11 +167,14 @@ var igvxhr = (function (igvxhr) {
 
 
             function handleError(message) {
+                var error = new Error(message);
+
+                error.extra = {'Request URL': url};
                 if (reject) {
-                    reject(message);
+                    reject(error);
                 }
                 else {
-                    throw Error(message);
+                    error;
                 }
             }
         });
