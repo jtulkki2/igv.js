@@ -162,22 +162,28 @@ var igv = (function (igv) {
     function popoverPosition(pageX, pageY, popoverWidget) {
 
         var left,
+            top,
             containerCoordinates = { x: pageX, y: pageY },
             containerRect = { x: 0, y: 0, width: $(window).width(), height: $(window).height() },
             popupRect,
             popupX = pageX,
             popupY = pageY;
 
+        popoverWidget.popover.css( { "height": "auto", "width": "auto" } );
         popupX -= popoverWidget.$parent.offset().left;
         popupY -= popoverWidget.$parent.offset().top;
         popupRect = { x: popupX, y: popupY, width: popoverWidget.popover.outerWidth(), height: popoverWidget.popover.outerHeight() };
 
         left = popupX;
         if (containerCoordinates.x + popupRect.width > containerRect.width) {
-            left = popupX - popupRect.width;
+            left = Math.max(0, popupX - popupRect.width);
+        }
+        top = popupY;
+        if (containerCoordinates.y + popupRect.height > containerRect.height) {
+            top = Math.max(0, popupY - popupRect.height);
         }
 
-        return { "left": left + "px", "top": popupY + "px" };
+        return { "left": left + "px", "top": top + "px" };
     }
 
     return igv;
