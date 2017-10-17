@@ -265,6 +265,10 @@ var igv = (function (igv) {
             _top = offset.top + body_scrolltop;
             _left = $host.outerWidth() - 300;
 
+            // Fix by JT: center the dialog
+            _top = body_scrolltop + (window.innerHeight - this.$container.height()) / 2;
+            _left = (window.innerWidth - this.$container.width()) / 2;
+
             this.$container.offset( { left: _left, top: _top } );
 
             //track_origin = $host.offset();
