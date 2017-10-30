@@ -330,11 +330,12 @@ var igv = (function (igv) {
 
             // toggle track labels
             $trackLabelToggle = $('<div class="igv-toggle-track-labels">');
-            $trackLabelToggle.text("hide labels");
+            $trackLabelToggle.text("labels");
+            $trackLabelToggle.addClass("igv-toggle-selected");
             $trackLabelToggle.click(function () {
                 browser.trackLabelsVisible = !browser.trackLabelsVisible;
-                $(this).text(true === browser.trackLabelsVisible ? "hide labels" : "show labels");
-                $(browser.trackContainerDiv).find('.igv-track-label').toggle();
+                $(this).toggleClass("igv-toggle-selected", browser.trackLabelsVisible);
+                $(browser.trackContainerDiv).find('.igv-track-label').toggle(browser.trackLabelsVisible);
             });
 
             // one base wide center guide
@@ -347,17 +348,17 @@ var igv = (function (igv) {
 
             $cursorTrackingGuideToggle = $('<div class="igv-toggle-track-labels">');
             display = browser.$cursorTrackingGuide.css("display");
-            $cursorTrackingGuideToggle.text("none" === display ? "show cursor guide" : "hide cursor guide");
+            $cursorTrackingGuideToggle.text("cursor guide");
+            $cursorTrackingGuideToggle.toggleClass("igv-toggle-selected", "none" === display);
 
             $cursorTrackingGuideToggle.click(function () {
                 display = browser.$cursorTrackingGuide.css("display");
                 if ("none" === display) {
                     browser.$cursorTrackingGuide.css("display", "block");
-                    $cursorTrackingGuideToggle.text("hide cursor guide");
                 } else {
                     browser.$cursorTrackingGuide.css("display", "none");
-                    $cursorTrackingGuideToggle.text("show cursor guide");
                 }
+                $cursorTrackingGuideToggle.toggleClass("igv-toggle-selected", "none" === display);
             });
 
             if(undefined === config.showCursorTrackingGuide || false == config.showCursorTrackingGuide) {

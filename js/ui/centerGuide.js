@@ -39,17 +39,17 @@ var igv = (function (igv) {
 
         cssDisplay = this.$container.css("display");
         this.$centerGuideToggle = $('<div class="igv-toggle-track-labels">');
-        this.$centerGuideToggle.text(("none" === cssDisplay) ? "show center guide" : "hide center guide");
+        this.$centerGuideToggle.text("center guide");
+        this.$centerGuideToggle.toggleClass("igv-toggle-selected", "none" !== cssDisplay);
 
         this.$centerGuideToggle.click(function () {
             cssDisplay = self.$container.css("display");
             if ("none" === cssDisplay) {
                 self.$container.css("display", "block");
-                self.$centerGuideToggle.text("hide center guide");
             } else {
                 self.$container.css("display", "none");
-                self.$centerGuideToggle.text("show center guide");
             }
+            self.$centerGuideToggle.toggleClass("igv-toggle-selected", "none" !== cssDisplay);
         });
 
         // Hide toggle unless property is set (for now, prior to official release)

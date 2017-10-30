@@ -790,6 +790,11 @@ div.ui-dialog fieldset {
     /*background-color: #c4c4c4;*/
 }
 
+.igv-toggle-track-labels.igv-toggle-selected {
+    color: white;
+    background-color: #444;
+}
+
 .igvNavigationMarginLeft12 {
 
     margin-left: 12px;
