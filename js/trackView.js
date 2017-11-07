@@ -728,8 +728,7 @@ var igv = (function (igv) {
 
         $(this.innerScrollDiv).mousedown(function (event) {
             offY = event.pageY - $(innerScrollDiv).position().top;
-            $(window).on("mousemove .igv", null, null, mouseMove);
-            $(window).on("mouseup .igv", null, null, mouseUp);
+            igv.grabMouse(mouseMove);
             event.stopPropagation();     // <= prevents start of horizontal track panning);
         });
 
@@ -759,11 +758,6 @@ var igv = (function (igv) {
             moveScrollerTo(event.pageY - offY);
             event.stopPropagation();
         }
-
-        function mouseUp(event) {
-            $(window).off("mousemove .igv", null, mouseMove);
-            $(window).off("mouseup .igv", null, mouseUp);
-        };
 
         function moveScrollerTo(y) {
             var H = $(outerScrollDiv).height(),

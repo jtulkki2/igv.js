@@ -544,6 +544,42 @@ var igv = (function (igv) {
         }
     };
 
+    igv.grabMouse = function(onMove, onEnd, cursor) {
+        const overlay = document.createElement('div');
+
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.bottom = '0';
+        overlay.style.zIndex = '1000';
+        if (cursor) {
+            overlay.style.cursor = cursor;
+        }
+
+        // Add transparent overlay to catch mouse events even if there are iframes in the page.
+        document.body.appendChild(overlay);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+
+        function onMouseMove(event) {
+            // Check if the button has been released. This can happen if for some reason we miss the mouse up event.
+            if (!event.buttons) {
+                onMouseUp(event);
+            } else {
+                onMove(event);
+            }
+        }
+
+        function onMouseUp(event) {
+            document.body.removeChild(overlay);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            if (onEnd) {
+                onEnd(event);
+            }
+        }
+    };
 
     return igv;
 
