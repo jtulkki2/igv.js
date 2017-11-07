@@ -544,6 +544,20 @@ var igv = (function (igv) {
         }
     };
 
+    igv.PromiseCache = function() {
+        cache = { };
+
+        this.fetch = function(key, callback) {
+            var cacheName = JSON.stringify(key);
+
+            if (cache[cacheName]) {
+                return cache[cacheName];
+            }
+
+            return cache[cacheName] = new Promise(callback);
+        }
+    };
+
     igv.grabMouse = function(onMove, onEnd, cursor) {
         const overlay = document.createElement('div');
 

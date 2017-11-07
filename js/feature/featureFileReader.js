@@ -35,6 +35,8 @@ var igv = (function (igv) {
      */
     igv.FeatureFileReader = function (config) {
 
+        this.cache = new igv.PromiseCache();
+
         this.config = config || {};
 
         if (config.localFile) {
@@ -123,7 +125,6 @@ var igv = (function (igv) {
         });
     }
 
-
     function loadFeaturesWithIndex(chr, start, end) {
 
         //console.log("Using index");
@@ -145,8 +146,7 @@ var igv = (function (igv) {
             else {
 
                 blocks.forEach(function (block) {
-
-                    promises.push(new Promise(function (fulfill, reject) {
+                    promises.push(self.cache.fetch(block, function (fulfill, reject) {
 
                         var startPos = block.minv.block,
                             startOffset = block.minv.offset,
@@ -189,7 +189,7 @@ var igv = (function (igv) {
                                 igvxhr.loadString(self.url, options).then(success).catch(reject);
                             }
                         }
-                    }))
+                    }));
                 });
 
                 Promise.all(promises).then(function (featureArrays) {

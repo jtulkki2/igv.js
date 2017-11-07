@@ -30,11 +30,13 @@ var igvxhr = (function (igvxhr) {
     const GZIP = 1;
     const BGZF = 2;
 
+    igvxhr.cache = new igv.PromiseCache();
+
     igvxhr.load = function (url, options) {
 
         if (!options) options = {};
 
-        return new Promise(function (fulfill, reject) {
+        return igvxhr.cache.fetch({url: url, options: options}, function (fulfill, reject) {
 
             var xhr = new XMLHttpRequest(),
                 sendData = options.sendData,
