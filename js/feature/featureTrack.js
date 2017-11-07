@@ -158,7 +158,7 @@ var igv = (function (igv) {
                 gene = featureList[i];
                 if (gene.end < bpStart) continue;
                 if (gene.start > bpEnd) break;
-                track.render.call(this, gene, bpStart, bpPerPixel, pixelHeight, ctx);
+                track.render.call(this, gene, bpStart, bpPerPixel, pixelHeight, ctx, options);
             }
         }
         else {
@@ -296,6 +296,20 @@ var igv = (function (igv) {
         };
     }
 
+    function forLoopInRange(start, end, step, rangeMin, rangeMax, callback) {
+        var x;
+
+        if (end > rangeMax) {
+            end -= Math.floor((end - rangeMax) / step) * step;
+        }
+        if (start < rangeMin) {
+            start += Math.floor((rangeMin - start) / step) * step;
+        }
+        for (x = start; x < end; x += step) {
+            callback(x);
+        }
+    }
+
     /**
      *
      * @param feature
@@ -304,7 +318,7 @@ var igv = (function (igv) {
      * @param pixelHeight  pixel height of the current canvas
      * @param ctx  the canvas 2d context
      */
-    function renderFeature(feature, bpStart, xScale, pixelHeight, ctx) {
+    function renderFeature(feature, bpStart, xScale, pixelHeight, ctx, options) {
 
         var x, e, exonCount, cy, direction, exon, ePx, ePx1, ePxU, ePw, py2, h2, py,
             windowX, windowX1,
@@ -353,11 +367,11 @@ var igv = (function (igv) {
             igv.graphics.strokeLine(ctx, coord.px + 1, cy, coord.px1 - 1, cy); // center line for introns
 
             direction = feature.strand == '+' ? 1 : -1;
-            for (x = coord.px + step / 2; x < coord.px1; x += step) {
+            forLoopInRange(coord.px + step / 2, coord.px1, step, 0, options.pixelWidth, function(x) {
                 // draw arrowheads along central line indicating transcribed orientation
                 igv.graphics.strokeLine(ctx, x - direction * 2, cy - 2, x, cy);
                 igv.graphics.strokeLine(ctx, x - direction * 2, cy + 2, x, cy);
-            }
+            });
             for (e = 0; e < exonCount; e++) {
                 // draw the exons
                 exon = feature.exons[e];
@@ -389,11 +403,11 @@ var igv = (function (igv) {
                     if (ePw > step + 5) {
                         ctx.fillStyle = "white";
                         ctx.strokeStyle = "white";
-                        for (x = ePx + step / 2; x < ePx1; x += step) {
+                        forLoopInRange(ePx + step / 2, ePx1, step, 0, options.pixelWidth, function(x) {
                             // draw arrowheads along central line indicating transcribed orientation
                             igv.graphics.strokeLine(ctx, x - direction * 2, cy - 2, x, cy);
                             igv.graphics.strokeLine(ctx, x - direction * 2, cy + 2, x, cy);
-                        }
+                        });
                         ctx.fillStyle = color;
                         ctx.strokeStyle = color;
 
