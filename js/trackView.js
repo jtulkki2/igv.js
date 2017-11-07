@@ -588,6 +588,10 @@ var igv = (function (igv) {
 
     }
 
+    function distance(x, y) {
+        return Math.sqrt(x * x + y * y);
+    }
+
     function addTrackHandlers(trackView) {
 
         // Register track handlers for popup.  Although we are not handling dragging here, we still need to check
@@ -597,6 +601,8 @@ var igv = (function (igv) {
             lastMouseX = undefined,
             mouseDownX = undefined,
             lastClickTime = 0,
+            lastClickX,
+            lastClickY,
             popupTimer,
             doubleClickDelay = igv.browser.constants.doubleClickDelay;
 
@@ -622,7 +628,7 @@ var igv = (function (igv) {
 
             if (!referenceFrame) return;
 
-            if (time - lastClickTime < doubleClickDelay) {
+            if (time - lastClickTime < doubleClickDelay && distance(e.screenX - lastClickX, e.screenY - lastClickY) < 5) {
                 // This is a double-click
 
                 if (popupTimer) {
@@ -692,6 +698,8 @@ var igv = (function (igv) {
             isMouseDown = false;
             lastMouseX = undefined;
             lastClickTime = time;
+            lastClickX = e.screenX;
+            lastClickY = e.screenY;
 
         });
 
