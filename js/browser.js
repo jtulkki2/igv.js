@@ -932,7 +932,8 @@ var igv = (function (igv) {
             isMouseDown = false,
             isDragging = false,
             lastMouseX = undefined,
-            mouseDownX = undefined;
+            mouseDownX = undefined,
+            mousePageX;
 
         $(trackContainerDiv).mousedown(function (e) {
 
@@ -951,6 +952,17 @@ var igv = (function (igv) {
             isMouseDown = true;
             lastMouseX = coords.x;
             mouseDownX = lastMouseX;
+            mousePageX = event.pageX;
+
+            if (coords.x >= 50 && coords.x < igv.browser.trackContainerDiv.clientWidth - 64) {
+                igv.grabMouse({
+                    event: e,
+                    onDrag: igv.throttle(mouseDrag, 10),
+                    onEnd: mouseUpOrOut,
+                    dragThresholdX: igv.browser.constants.dragThreshold,
+                    overlayClass: 'igv-grabbing-cursor'
+                });
+            }
         });
 
         // Guide line is bound within track area, and offset by 5 pixels so as not to interfere mouse clicks.
@@ -967,34 +979,23 @@ var igv = (function (igv) {
         });
 
 
-        $(trackContainerDiv).mousemove(igv.throttle(function (e) {
-
-            var coords = igv.translateMouseCoordinates(e, trackContainerDiv);
-
-            if (isRulerTrack) {
-                return;
-            }
+        function mouseDrag(e) {
 
             if (!igv.browser.referenceFrame) {
                 return;
             }
 
-            if (isMouseDown) { // Possibly dragging
-
-                if (mouseDownX && Math.abs(coords.x - mouseDownX) > igv.browser.constants.dragThreshold) {
-                    if (igv.browser.loadInProgress()) {
-                        // ignore
-                        return;
-                    }
-                    isDragging = true;
-                    scrollFrame(lastMouseX - coords.x);
+            if (isDragging || Math.abs(e.pageX - mousePageX) > igv.browser.constants.dragThreshold) {
+                if (igv.browser.loadInProgress()) {
+                    // ignore
+                    return;
                 }
-
-                lastMouseX = coords.x;
-
+                isDragging = true;
+                scrollFrame(mousePageX - e.pageX);
+                mousePageX = e.pageX;
             }
 
-        }, 10));
+        }
 
         $(trackContainerDiv).mouseup(mouseUpOrOut);
 

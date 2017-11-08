@@ -558,40 +558,58 @@ var igv = (function (igv) {
         }
     };
 
-    igv.grabMouse = function(onMove, onEnd, cursor) {
-        const overlay = document.createElement('div');
+    igv.grabMouse = function(options) {
+        var overlay;
+        var dragging = false;
 
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.right = '0';
-        overlay.style.bottom = '0';
-        overlay.style.zIndex = '1000';
-        if (cursor) {
-            overlay.style.cursor = cursor;
+        if (shouldDrag(0, 0)) {
+            startDragging();
         }
 
-        // Add transparent overlay to catch mouse events even if there are iframes in the page.
-        document.body.appendChild(overlay);
         window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('mouseup', onMouseUp);
 
+        function startDragging() {
+            dragging = true;
+            overlay = document.createElement('div');
+            overlay.className = 'igv-grab-overlay' + (options.overlayClass ? ' ' + options.overlayClass : '');
+            if (options.cursor) {
+                overlay.style.cursor = options.cursor;
+            }
+
+            // Add transparent overlay to catch mouse events even if there are iframes in the page.
+            document.body.appendChild(overlay);
+        }
+
+        function shouldDrag(dx, dy) {
+            return !(Math.abs(dx) < options.dragThresholdX || Math.abs(dy) < options.dragThresholdY);
+        }
+
         function onMouseMove(event) {
+            if (!dragging && shouldDrag(event.pageX - options.event.pageX, event.pageY - options.event.pageY)) {
+                startDragging(true);
+            }
             // Check if the button has been released. This can happen if for some reason we miss the mouse up event.
             if (!event.buttons) {
                 onMouseUp(event);
-            } else {
-                onMove(event);
+            } else if (dragging) {
+                options.onDrag(event);
             }
         }
 
         function onMouseUp(event) {
-            document.body.removeChild(overlay);
+            if (overlay) {
+                document.body.removeChild(overlay);
+            }
             window.removeEventListener('mousemove', onMouseMove);
             window.removeEventListener('mouseup', onMouseUp);
-            if (onEnd) {
-                onEnd(event);
+            if (options.onEnd) {
+                options.onEnd(event);
             }
+        }
+
+        function distance(x, y) {
+            return Math.sqrt(x * x + y * y);
         }
     };
 

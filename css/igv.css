@@ -1574,6 +1574,20 @@ div.ui-dialog fieldset {
     /*border-color: #7e7e7e;*/
 }
 
+.igv-grab-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.igv-grabbing-cursor {
+    cursor: grabbing;
+    cursor: -webkit-grabbing;
+}
+
 .spacer5 {
     height: 5px;
     width: 100%;

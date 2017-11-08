@@ -736,7 +736,7 @@ var igv = (function (igv) {
 
         $(this.innerScrollDiv).mousedown(function (event) {
             offY = event.pageY - $(innerScrollDiv).position().top;
-            igv.grabMouse(mouseMove);
+            igv.grabMouse({onDrag: mouseMove});
             event.stopPropagation();     // <= prevents start of horizontal track panning);
         });
 
