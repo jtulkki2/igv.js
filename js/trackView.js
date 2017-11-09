@@ -454,6 +454,7 @@ var igv = (function (igv) {
 
                             self.track.paintAxis(ctx2, buffer2.width, buffer2.height);
 
+                            self.controlCtx.clearRect(0, 0, buffer2.width, buffer2.height);
                             self.controlCtx.drawImage(buffer2, 0, 0);
                         }
 

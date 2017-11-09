@@ -122,6 +122,27 @@ var igv = (function (igv) {
     }
 
 
+    igv.SegTrack.prototype.paintAxis = function (ctx, pixelWidth, pixelHeight) {
+        var self = this,
+            sampleHeight = ("SQUISHED" === this.displayMode) ? this.sampleSquishHeight : this.sampleExpandHeight,
+            border = ("SQUISHED" === this.displayMode) ? 0 : 1;
+
+        if (sampleHeight < 8) {
+            return;
+        }
+
+        Object.keys(this.samples).forEach(function(sample, i) {
+            var y = i * sampleHeight + border;
+
+            if (sample == self.config.currentSample) {
+                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#000'});
+                igv.graphics.fillText(ctx, sample, 2, y + 9, {fillStyle: '#fff'});
+            } else {
+                igv.graphics.fillText(ctx, sample, 2, y + 9);
+            }
+        });
+    }
+
     igv.SegTrack.prototype.draw = function (options) {
 
         var myself = this,
