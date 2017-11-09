@@ -29,12 +29,13 @@ var igv = (function (igv) {
 
         igv.configTrack(this, config);
 
+        this.inlineLabel = config.inlineLabel || false;
         this.displayMode = config.displayMode || "COLLAPSED";    // COLLAPSED | EXPANDED | SQUISHED
         this.labelDisplayMode = config.labelDisplayMode;
 
         this.variantHeight = config.variantHeight || this.height;
-        this.squishedCallHeight = config.squishedCallHeight || 30;
-        this.expandedCallHeight = config.expandedCallHeight || 15;
+        this.squishedCallHeight = config.squishedCallHeight || 15;
+        this.expandedCallHeight = config.expandedCallHeight || (this.inlineLabel ? 16 : 30);
 
         this.featureHeight = config.featureHeight || 14;
 
@@ -44,6 +45,7 @@ var igv = (function (igv) {
         }
         this.maxRows = config.maxRows;
 
+        this.height = this.computePixelHeight();
 
         if (config.url && (config.url.toLowerCase().endsWith(".bigbed") || config.url.toLowerCase().endsWith(".bb"))) {
             this.featureSource = new igv.BWSource(config);
@@ -119,7 +121,6 @@ var igv = (function (igv) {
      * @returns {*}
      */
     igv.FeatureTrack.prototype.computePixelHeight = function (features) {
-
         if (this.displayMode === "COLLAPSED") {
             return this.variantHeight;
         }
@@ -128,11 +129,13 @@ var igv = (function (igv) {
             if (features && (typeof features.forEach === "function")) {
                 features.forEach(function (feature) {
 
-                    if (feature.row && feature.row > maxRow) maxRow = feature.row;
+                    if (feature.row && feature.row > maxRow) {
+                        maxRow = feature.row;
+                    }
 
                 });
             }
-            return Math.max(this.variantHeight, (maxRow + 1) * (this.displayMode === "SQUISHED" ? this.expandedCallHeight : this.squishedCallHeight));
+            return Math.max(this.variantHeight, (maxRow + 1) * (this.displayMode === "SQUISHED" ? this.squishedCallHeight : this.expandedCallHeight));
 
         }
 
@@ -182,7 +185,7 @@ var igv = (function (igv) {
                 row;
 
             if (this.displayMode != "COLLAPSED") {
-                row = (Math.floor)(this.displayMode === "SQUISHED" ? yOffset / this.expandedCallHeight : yOffset / this.squishedCallHeight);
+                row = (Math.floor)(this.displayMode === "SQUISHED" ? yOffset / this.squishedCallHeight : yOffset / this.expandedCallHeight);
             }
 
             if (featureList && featureList.length > 0) {
@@ -344,11 +347,11 @@ var igv = (function (igv) {
 
         if (this.displayMode === "SQUISHED" && feature.row != undefined) {
             h = this.featureHeight / 2;
-            py = this.expandedCallHeight * feature.row + 2;
+            py = this.squishedCallHeight * feature.row + 1;
         } else if (this.displayMode === "EXPANDED" && feature.row != undefined) {
-            py = this.squishedCallHeight * feature.row + 5;
+            py = this.expandedCallHeight * feature.row + 1;
         } else {  // collapsed
-            py = 5;
+            py = 0;
         }
 
         cy = py + h / 2;
@@ -434,7 +437,8 @@ var igv = (function (igv) {
         var geneColor, geneFontStyle, transform,
             boxX, boxX1,    // label should be centered between these two x-coordinates
             labelX, labelY,
-            textFitsInBox;
+            textFitsInBox,
+            textWidth;
 
         // feature outside of viewable window
         if (featureX1 < windowX || featureX > windowX1) {
@@ -451,13 +455,14 @@ var igv = (function (igv) {
             geneColor = igv.browser.selection.colorForGene(feature.name);
         }
 
-        textFitsInBox = (boxX1 - boxX) > ctx.measureText(feature.name).width;
+        textWidth = ctx.measureText(feature.name).width;
+        textFitsInBox = (boxX1 - boxX) > textWidth;
 
         if ((textFitsInBox || geneColor) && this.displayMode != "SQUISHED" && feature.name !== undefined) {
             geneFontStyle = {
                 font: '10px PT Sans',
                 textAlign: 'center',
-                fillStyle: geneColor || this.color,
+                fillStyle: this.inlineLabel ? '#fff' : geneColor || this.color,
                 strokeStyle: geneColor || this.color
             };
 
@@ -467,13 +472,19 @@ var igv = (function (igv) {
             }
 
             labelX = boxX + ((boxX1 - boxX) / 2);
-            labelY = getFeatureLabelY(featureY, transform);
+            labelY = getFeatureLabelY(featureY, transform, this.inlineLabel);
 
+            if (this.inlineLabel) {
+                igv.graphics.fillRect(ctx, labelX - 1, featureY, textWidth + 2, this.featureHeight);
+            }
             igv.graphics.fillText(ctx, feature.name, labelX, labelY, geneFontStyle, transform);
         }
     }
 
-    function getFeatureLabelY(featureY, transform) {
+    function getFeatureLabelY(featureY, transform, inlineLabel) {
+        if (inlineLabel) {
+            return featureY + 10;
+        }
         return transform ? featureY + 20 : featureY + 25;
     }
 
@@ -544,7 +555,7 @@ var igv = (function (igv) {
         var coord = calculateFeatureCoordinates(feature, bpStart, xScale),
             py = 5, h = 10; // defaults borrowed from renderFeature above
 
-        var rowHeight = (this.displayMode === "EXPANDED") ? this.squishedCallHeight : this.expandedCallHeight;
+        var rowHeight = (this.displayMode === "EXPANDED") ? this.expandedCallHeight : this.squishedCallHeight;
 
         // console.log("row height = " + rowHeight);
 

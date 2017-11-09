@@ -56,14 +56,16 @@ var igv = (function (igv) {
             bpStart = options.bpStart,
             pixelWidth = options.pixelWidth,
             bpEnd = bpStart + pixelWidth * bpPerPixel + 1,
-            len, w, y, pos, offset, b, p0, p1, pc, c;
+            len, w, y, pos, offset, b, p0, p1, pc, c, gap;
 
         if (sequence) {
 
             len = sequence.length;
             w = 1 / bpPerPixel;
 
-            y = this.height / 2;
+            gap = w >= 2 ? 1 : 0;
+
+            y = this.height / 2 + 3;
             for (pos = bpStart; pos <= bpEnd; pos++) {
 
                 offset = pos - bpStart;
@@ -88,7 +90,7 @@ var igv = (function (igv) {
 
                     if (bpPerPixel > 1 / 10) {
 
-                        igv.graphics.fillRect(ctx, p0, 0, p1 - p0, 10, {fillStyle: c});
+                        igv.graphics.fillRect(ctx, p0, 2, p1 - p0 - gap, 10, {fillStyle: c});
                     }
                     else {
 

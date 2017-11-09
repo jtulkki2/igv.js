@@ -201,7 +201,7 @@ var igv = (function (igv) {
                 igv.popover.presentTrackPopup(e.pageX, e.pageY, description, false);
             });
 
-            $(this.viewportDiv).append($trackLabel[0]);
+            $(this.trackDiv).append($trackLabel[0]);
         }
 
     };

@@ -180,7 +180,7 @@ var igv = (function (igv) {
             callHeight = ("EXPANDED" === this.displayMode ? this.expandedCallHeight : this.squishedCallHeight),
             px, px1, pw, py, h, style, i, variant, call, callSet, j, allRef, allVar, callSets;
 
-        this.variantBandHeight = 10 + this.nRows * (this.variantHeight + vGap);
+        this.variantBandHeight = 5 + this.nRows * (this.variantHeight + vGap);
 
         callSets = this.callSets;
 
@@ -196,7 +196,7 @@ var igv = (function (igv) {
                 if (variant.end < bpStart) continue;
                 if (variant.start > bpEnd) break;
 
-                py = 10 + ("COLLAPSED" === this.displayMode ? 0 : variant.row * (this.variantHeight + vGap));
+                py = 5 + ("COLLAPSED" === this.displayMode ? 0 : variant.row * (this.variantHeight + vGap));
                 h = this.variantHeight;
 
                 px = Math.round((variant.start - bpStart) / bpPerPixel);

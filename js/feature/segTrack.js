@@ -135,11 +135,9 @@ var igv = (function (igv) {
             var y = i * sampleHeight + border;
 
             if (sample == self.config.currentSample) {
-                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#000'});
-                igv.graphics.fillText(ctx, sample, 2, y + 9, {fillStyle: '#fff'});
-            } else {
-                igv.graphics.fillText(ctx, sample, 2, y + 9);
+                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#ddd'});
             }
+            igv.graphics.fillText(ctx, sample, 4, y + 9);
         });
     }
 
