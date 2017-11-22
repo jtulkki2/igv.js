@@ -131,11 +131,11 @@ var igv = (function (igv) {
             return;
         }
 
-        Object.keys(this.samples).forEach(function(sample, i) {
-            var y = i * sampleHeight + border;
+        Object.keys(this.samples).forEach(function(sample) {
+            var y = self.samples[sample] * sampleHeight + border;
 
             if (sample == self.config.currentSample) {
-                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#ddd'});
+                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#ccc'});
             }
             igv.graphics.fillText(ctx, sample, 4, y + 9);
         });
@@ -166,12 +166,12 @@ var igv = (function (igv) {
             border;
 
         sampleHeight = ("SQUISHED" === this.displayMode) ? this.sampleSquishHeight : this.sampleExpandHeight;
-        border = ("SQUISHED" === this.displayMode) ? 0 : 1;
+        border = ("SQUISHED" === this.displayMode) ? 0 : 0;
 
         ctx = options.context;
         pixelWidth = options.pixelWidth;
         pixelHeight = options.pixelHeight;
-        igv.graphics.fillRect(ctx, 0, 0, pixelWidth, pixelHeight, {'fillStyle': "rgb(255, 255, 255)"});
+        igv.graphics.fillRect(ctx, 0, 0, pixelWidth, pixelHeight, {'fillStyle': "rgb(235, 235, 235)"});
 
         featureList = options.features;
         if (featureList) {
@@ -189,6 +189,14 @@ var igv = (function (igv) {
                     this.sampleCount++;
                 }
             }
+
+            // Sort samples by name
+            this.sampleNames.sort(compareSampleNames);
+            this.samples = { };
+            this.sampleNames.forEach(function(item, index) {
+                myself.samples[item] = index;
+            });
+
 
             checkForLog(featureList);
 
@@ -223,6 +231,16 @@ var igv = (function (igv) {
                 igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
 
             }
+
+            // Indicate current sample
+            if (this.samples[this.config.currentSample] != undefined) {
+                y = this.samples[this.config.currentSample] * sampleHeight;
+                ctx.setLineDash([2, 3]);
+                igv.graphics.strokeLine(ctx, 0, y, pixelWidth, y);
+                igv.graphics.strokeLine(ctx, 0, y + sampleHeight - 1, pixelWidth, y + sampleHeight - 1);
+                ctx.setLineDash([]);
+//                igv.graphics.strokeRect(ctx, 0, y - 2, pixelWidth, sampleHeight + 2, {fillStyle: '#000'});
+            }
         }
         else {
             console.log("No feature list");
@@ -240,6 +258,22 @@ var igv = (function (igv) {
                     }
                 }
             }
+        }
+
+        function compareSampleNames(a, b) {
+            var numberA = Number(a);
+            var numberB = Number(b);
+
+            if (isFinite(numberA) && isFinite(numberB)) {
+                return numberA - numberB;
+            }
+            if (a < b) {
+                return -1;
+            }
+            if (a > b) {
+                return 1;
+            }
+            return 0;
         }
     };
 
