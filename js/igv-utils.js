@@ -590,7 +590,7 @@ var igv = (function (igv) {
                 startDragging(true);
             }
             // Check if the button has been released. This can happen if for some reason we miss the mouse up event.
-            if (!event.buttons) {
+            if (event.buttons === 0 || event.which === 0) {
                 onMouseUp(event);
             } else if (dragging) {
                 options.onDrag(event);
