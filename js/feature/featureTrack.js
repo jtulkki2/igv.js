@@ -355,7 +355,7 @@ var igv = (function (igv) {
         }
 
         cy = py + h / 2;
-        h2 = h / 2;
+        h2 = Math.round(h / 4) * 2;
         py2 = cy - h2 / 2;
 
         exonCount = feature.exons ? feature.exons.length : 0;
@@ -456,7 +456,7 @@ var igv = (function (igv) {
         }
 
         textWidth = ctx.measureText(feature.name).width;
-        textFitsInBox = (boxX1 - boxX) > textWidth;
+        textFitsInBox = (boxX1 - boxX) > textWidth + 2;
 
         if ((textFitsInBox || geneColor) && this.displayMode != "SQUISHED" && feature.name !== undefined) {
             geneFontStyle = {
@@ -472,18 +472,15 @@ var igv = (function (igv) {
             }
 
             labelX = boxX + ((boxX1 - boxX) / 2);
-            labelY = getFeatureLabelY(featureY, transform, this.inlineLabel);
+            labelY = getFeatureLabelY.call(this, featureY, transform);
 
-            if (this.inlineLabel) {
-                igv.graphics.fillRect(ctx, labelX - 1, featureY, textWidth + 2, this.featureHeight);
-            }
             igv.graphics.fillText(ctx, feature.name, labelX, labelY, geneFontStyle, transform);
         }
     }
 
-    function getFeatureLabelY(featureY, transform, inlineLabel) {
-        if (inlineLabel) {
-            return featureY + 10;
+    function getFeatureLabelY(featureY, transform) {
+        if (this.inlineLabel) {
+            return featureY + this.featureHeight / 2 + 3;
         }
         return transform ? featureY + 20 : featureY + 25;
     }
