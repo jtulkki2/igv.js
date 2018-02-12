@@ -168,7 +168,7 @@ var igv = (function (igv) {
 
         // scrollbar,  default is to set overflow ot hidden and use custom scrollbar, but this can be overriden so check
         if ("hidden" === $(this.viewportDiv).css("overflow-y")) {
-            this.scrollbar = new TrackScrollbar(this.viewportDiv, this.contentDiv);
+            this.scrollbar = new TrackScrollbar(this.viewportDiv, this.contentDiv, this.controlCanvas);
             this.scrollbar.update();
             $(this.viewportDiv).append(this.scrollbar.outerScrollDiv);
             // Added by JT 2017/10/17
@@ -711,7 +711,7 @@ var igv = (function (igv) {
      * Creates a vertical scrollbar to slide an inner "contentDiv" with respect to an enclosing "viewportDiv"
      *
      */
-    TrackScrollbar = function (viewportDiv, contentDiv) {
+    TrackScrollbar = function (viewportDiv, contentDiv, controlCanvas) {
 
         var outerScrollDiv = $('<div class="igv-scrollbar-outer-div">')[0],
             innerScrollDiv = $('<div class="igv-scrollbar-inner-div">')[0],
@@ -721,6 +721,7 @@ var igv = (function (igv) {
 
         this.viewportDiv = viewportDiv;
         this.contentDiv = contentDiv;
+        this.controlCanvas = controlCanvas;
         this.outerScrollDiv = outerScrollDiv;
         this.innerScrollDiv = innerScrollDiv;
         // Added by JT 2017/10/17
@@ -775,6 +776,9 @@ var igv = (function (igv) {
                 contentTop = -Math.round(newTop * ($(contentDiv).height() / $(viewportDiv).height()));
             $(innerScrollDiv).css("top", newTop + "px");
             $(contentDiv).css("top", contentTop + "px");
+            if (controlCanvas) {
+                $(controlCanvas).css("top", contentTop + "px");
+            }
         }
     }
 

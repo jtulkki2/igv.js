@@ -1130,6 +1130,7 @@ div.ui-dialog fieldset {
     left: 0;
     width: 50px;
     height: 100%;
+    overflow: hidden;
 }
 
 .igv-clickable {
