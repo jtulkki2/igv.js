@@ -92,7 +92,7 @@ var igv = (function (igv) {
 
                 allFeatures.push({
                     sample: tokens[sampleColumn],
-                    chr: tokens[chrColumn],
+                    chr: fixChromosome(tokens[chrColumn]),
                     start: parseInt(tokens[startColumn]),
                     end: parseInt(tokens[endColumn]),
                     value: parseFloat(tokens[dataColumn])
@@ -102,6 +102,15 @@ var igv = (function (igv) {
 
         return allFeatures;
 
+        // HOTFIX to fix broken SEG-files (added by Jouni 2018/2/13)
+        function fixChromosome(chr) {
+            if (chr == 23)
+                return 'X';
+            if (chr == 24)
+                return 'Y';
+            return chr;
+
+        }
     }
 
 
