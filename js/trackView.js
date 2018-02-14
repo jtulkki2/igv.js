@@ -297,6 +297,8 @@ var igv = (function (igv) {
      */
     igv.TrackView.prototype.setContentHeight = function (newHeight) {
 
+        this.track.contentHeight = newHeight;
+
         // Maximum height of a canvas is ~32,000 pixels on Chrome, possibly smaller on other platforms
         newHeight = Math.min(newHeight, 32000);
 
@@ -305,7 +307,7 @@ var igv = (function (igv) {
         var contentHeightStr = newHeight + "px";
 
         // Optionally adjust the trackDiv and viewport height to fit the content height, within min/max bounds
-        if (this.track.autoHeight) {
+        if (this.track.autoHeight && !this.track.config.flexHeight) {
             setTrackHeight_.call(this, newHeight, false);
         }
 
@@ -317,6 +319,8 @@ var igv = (function (igv) {
         }
 
         if (this.scrollbar) this.scrollbar.update();
+
+        igv.browser.onTrackViewContentHeightChange(this);
     };
 
     function setTrackHeight_(newHeight, update) {
@@ -325,19 +329,13 @@ var igv = (function (igv) {
 
         if (this.track.minHeight) newHeight = Math.max(this.track.minHeight, newHeight);
         if (this.track.maxHeight) newHeight = Math.min(this.track.maxHeight, newHeight);
-        // if (newHeight === this.track.height) return;   // Nothing to do
+        if (newHeight === this.track.height) return;   // Nothing to do
 
         trackHeightStr = newHeight + "px";
 
         this.track.height = newHeight;    // Recorded on track for use when saving sessions
 
         this.trackDiv.style.height = trackHeightStr;
-
-        if (this.track.paintAxis) {
-            this.controlCanvas.style.height = trackHeightStr;
-            this.controlCanvas.setAttribute("height", newHeight);
-        }
-
         this.viewportDiv.style.height = trackHeightStr;
 
 
@@ -384,6 +382,10 @@ var igv = (function (igv) {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                 igv.stopSpinnerAtParentElement(this.trackDiv);      // TODO -  WHY DO WE HAVE TO DO THIS ???
                 this.$zoomInNotice.show();
+                var requiredHeight = 20;
+                if (requiredHeight != self.contentDiv.clientHeight) {
+                    self.setContentHeight(requiredHeight);
+                }
                 return;
             } else {
                 this.$zoomInNotice.hide();
@@ -724,6 +726,8 @@ var igv = (function (igv) {
         this.controlCanvas = controlCanvas;
         this.outerScrollDiv = outerScrollDiv;
         this.innerScrollDiv = innerScrollDiv;
+        this.moveScrollerToY = moveScrollerTo;
+
         // Added by JT 2017/10/17
         this.scroll = function (change) {
             var ratio = $(viewportDiv).height() / $(contentDiv).height();
@@ -792,6 +796,7 @@ var igv = (function (igv) {
             $(this.innerScrollDiv).height(newInnerHeight);
         }
         else {
+            this.moveScrollerToY(0);
             $(this.outerScrollDiv).hide();
         }
     }

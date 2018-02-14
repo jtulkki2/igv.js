@@ -33,6 +33,7 @@ var igv = (function (igv) {
         igv.browser = this;   // Make globally visible (for use in html markup).
 
         this.config = options;
+        this.updatingLayout = 0;
 
         this.div = $('<div id="igvRootDiv" class="igv-root-div">')[0];
 
@@ -254,6 +255,8 @@ var igv = (function (igv) {
         this.reorderTracks();
 
         trackView.resize();
+
+        this.updateLayout();
     };
 
     igv.Browser.prototype.reorderTracks = function () {
@@ -294,6 +297,7 @@ var igv = (function (igv) {
             this.fireEvent('trackremoved', [trackPanelRemoved.track]);
         }
 
+        this.updateLayout();
     };
 
     igv.Browser.prototype.reduceTrackOrder = function (trackView) {
@@ -377,7 +381,100 @@ var igv = (function (igv) {
         this.trackViews.forEach(function (panel) {
             panel.resize();
         })
+        this.updateLayout();
     };
+
+    igv.Browser.prototype.onTrackViewContentHeightChange = function(trackView) {
+        this.updateLayout();
+    }
+
+    igv.Browser.prototype.updateLayout = function () {
+        var usedHeight = 62;
+        var items = [];
+
+        if (this.updatingLayout) {
+            return;
+        }
+        this.trackViews.forEach(function(trackView) {
+            var track = trackView.track;
+
+            if (track.config && track.config.flexHeight > 0) {
+                items.push({
+                    trackView: trackView,
+                    size: track.contentHeight || track.height,
+                    flexGrow: track.config.flexGrowHeight != undefined ? track.config.flexGrowHeight : 1
+                });
+            } else {
+                usedHeight += track.height;
+            }
+            usedHeight += 4;
+        });
+
+        var availableHeight = this.div.parentNode.clientHeight - usedHeight;
+
+        adjustSizes(items, availableHeight);
+
+        this.updatingLayout++;
+        items.forEach(function(item) {
+            var trackView = item.trackView;
+            var height = item.size;
+
+            trackView.track.maxHeight = height;
+            trackView.setTrackHeight(height, true);
+        });
+        this.updatingLayout--;
+
+        function adjustSizes(items, availableSpace) {
+            var i, j;
+            var sum = 0;
+            var sorted;
+            var spaceLeft = availableSpace;
+            var size;
+
+            for (i = 0; i < items.length; i++) {
+                sum += items[i].size;
+            }
+
+            if (sum < availableSpace) {
+                var maxFlexGrow = Math.max.apply(null, items.map(function(item) { return item.flexGrow; }));
+
+                sorted = items
+                    .filter(function(item) { return item.flexGrow == maxFlexGrow; })
+                    .sort(function(a, b) { return b.size - a.size; });
+
+                items.filter(function(item) { return item.flexGrow < maxFlexGrow; })
+                    .forEach(function(item) { spaceLeft -= item.size; });
+
+                for (i = 0; i < sorted.length; i++) {
+                    size = spaceLeft / (sorted.length - i);
+
+                    if (size > sorted[i].size) {
+                        for (j = i; j < sorted.length; j++) {
+                            sorted[j].size = size;
+                        }
+                        break;
+                    } else {
+                        spaceLeft -= sorted[i].size;
+                    }
+                }
+            } else {
+                sorted = items.slice().sort(function(a, b) { return a.size - b.size; });
+
+                for (i = 0; i < sorted.length; i++) {
+                    size = spaceLeft / (sorted.length - i);
+
+                    if (size < sorted[i].size) {
+                        for (j = i; j < sorted.length; j++) {
+                            sorted[j].size = size;
+                        }
+                        break;
+                    } else {
+                        spaceLeft -= sorted[i].size;
+                    }
+                }
+            }
+        }
+    }
 
     igv.Browser.prototype.repaint = function () {
 
@@ -410,10 +507,12 @@ var igv = (function (igv) {
             this.karyoPanel.repaint();
         }
 
+        this.updatingLayout++;
         this.trackViews.forEach(function (trackPanel) {
             trackPanel.update();
         });
-
+        this.updatingLayout--;
+        this.updateLayout();
     };
 
     igv.Browser.prototype.loadInProgress = function () {
