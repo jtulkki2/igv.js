@@ -1269,6 +1269,7 @@ var igv = (function (igv) {
                     case "vcf":
                         config.type = "variant";
                         break;
+                    case "packed_seg":
                     case "seg":
                         config.type = "seg";
                         break;

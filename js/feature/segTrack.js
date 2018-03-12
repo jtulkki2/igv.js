@@ -98,6 +98,20 @@ var igv = (function (igv) {
         this.trackView.update();
     };
 
+    igv.SegTrack.prototype.getFileHeader = function () {
+        var self = this;
+        return new Promise(function (fulfill, reject) {
+            if (typeof self.featureSource.getFileHeader === "function") {
+                self.featureSource.getFileHeader().then(function (header) {
+                    fulfill(header);
+
+                }).catch(reject);
+            }
+            else {
+                fulfill(null);
+            }
+        });
+    };
 
     igv.SegTrack.prototype.getFeatures = function (chr, bpStart, bpEnd) {
 
