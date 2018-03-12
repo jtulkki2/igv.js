@@ -56,7 +56,7 @@ var igv = (function (igv) {
 
         this.downsampledReads = new Set();
 
-        this.currentBucket = new DownsampleBucket(this.start, this.start + this.samplingWindowSize, this);
+        this.currentBucket = new DownsampleBucket(0, this.samplingWindowSize, this);
 
         this.filter = function filter(alignment) {         // TODO -- pass this in
             return alignment.isMapped() && !alignment.isFailsVendorQualityCheck();
