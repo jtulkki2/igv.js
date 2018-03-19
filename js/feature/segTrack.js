@@ -101,7 +101,7 @@ var igv = (function (igv) {
     igv.SegTrack.prototype.getFileHeader = function () {
         var self = this;
         return new Promise(function (fulfill, reject) {
-            if (typeof self.featureSource.getFileHeader === "function") {
+            if (self.config.format == 'packed_seg' && typeof self.featureSource.getFileHeader === "function") {
                 self.featureSource.getFileHeader().then(function (header) {
                     fulfill(header);
 
