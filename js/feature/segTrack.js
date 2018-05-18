@@ -36,6 +36,7 @@ var igv = (function (igv) {
         this.maxHeight = config.maxHeight || 500;
         this.sampleSquishHeight = config.sampleSquishHeight || 2;
         this.sampleExpandHeight = config.sampleExpandHeight || 12;
+        this.isLog = true; // Force log scale (Added by JT)
 
         this.posColorScale = config.posColorScale ||
             new igv.GradientColorScale(
