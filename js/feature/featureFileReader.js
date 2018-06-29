@@ -65,7 +65,7 @@ var igv = (function (igv) {
                 return new igv.VcfParser();
             case "seg" :
                 return new igv.SegParser();
-            case "packed_seg" :
+            case "packed_seg":
                 return new igv.PackedSegParser();
             default:
                 return new igv.FeatureParser(format, decode, this.config);

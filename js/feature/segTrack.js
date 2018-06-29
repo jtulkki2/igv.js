@@ -186,7 +186,7 @@ var igv = (function (igv) {
         ctx = options.context;
         pixelWidth = options.pixelWidth;
         pixelHeight = options.pixelHeight;
-        igv.graphics.fillRect(ctx, 0, 0, pixelWidth, pixelHeight, {'fillStyle': "rgb(235, 235, 235)"});
+        igv.graphics.fillRect(ctx, 0, 0, pixelWidth, pixelHeight, {'fillStyle': "rgb(205, 205, 205)"});
 
         featureList = options.features;
         if (featureList) {
@@ -215,6 +215,8 @@ var igv = (function (igv) {
 
             checkForLog(featureList);
 
+            var sampleX = {};
+
             for (i = 0, len = featureList.length; i < len; i++) {
 
                 segment = featureList[i];
@@ -242,8 +244,12 @@ var igv = (function (igv) {
                 px = Math.round((segment.start - bpStart) / xScale);
                 px1 = Math.round((segment.end - bpStart) / xScale);
                 pw = Math.max(1, px1 - px);
-
-                igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
+                // Avoid drawing rectangle if it is in the same pixel as the previous rectangle.
+                // This speeds up drawing on low zoom levels.
+                if (sampleX[segment.sample] == undefined || sampleX[segment.sample] < px) {
+                    sampleX[segment.sample] = px1;
+                    igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
+                }
 
             }
 
