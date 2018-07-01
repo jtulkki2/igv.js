@@ -435,6 +435,10 @@ var igv = (function (igv) {
                         buffer.height = self.canvas.height;
                         ctx = buffer.getContext('2d');
 
+                        if (buffer.width == 0 || buffer.height == 0) {
+                            return;
+                        }
+
                         self.track.draw({
                             features: features,
                             context: ctx,
