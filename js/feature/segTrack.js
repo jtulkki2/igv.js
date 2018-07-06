@@ -246,7 +246,7 @@ var igv = (function (igv) {
                 pw = Math.max(1, px1 - px);
                 // Avoid drawing rectangle if it is in the same pixel as the previous rectangle.
                 // This speeds up drawing on low zoom levels.
-                if (sampleX[segment.sample] == undefined || sampleX[segment.sample] < px) {
+                if (sampleX[segment.sample] == undefined || sampleX[segment.sample] < px1) {
                     sampleX[segment.sample] = px1;
                     igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
                 }
