@@ -71,6 +71,8 @@ var igv = (function (igv) {
 
         $('.igv-ideogram-content-div').addClass('igv-ideogram-gutter-shim');
         $('.igv-viewport-div').addClass('igv-gutter-shim');
+        $('.igv-ideogram-content-div').css({marginLeft: this.browser.config.leftHandGutterWidth + 'px'});
+        $('.igv-viewport-div').css({left: this.browser.config.leftHandGutterWidth + 'px'});
 
         function makeTrackDraggable(track) {
 
@@ -200,6 +202,7 @@ var igv = (function (igv) {
             $trackLabel.click(function (e) {
                 igv.popover.presentTrackPopup(e.pageX, e.pageY, description, false);
             });
+            $trackLabel.css({left: this.browser.config.leftHandGutterWidth + 'px'});
 
             $(this.trackDiv).append($trackLabel[0]);
         }
@@ -217,6 +220,7 @@ var igv = (function (igv) {
         if (this.track.paintAxis) {
 
             $leftHandGutter = $('<div class="igv-left-hand-gutter">');
+            $leftHandGutter.css({width: this.browser.config.leftHandGutterWidth + 'px'});
             $track.append($leftHandGutter[0]);
 
             $canvas = $('<canvas class ="igv-track-control-canvas">');

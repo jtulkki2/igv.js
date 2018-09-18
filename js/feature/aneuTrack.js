@@ -242,7 +242,7 @@ var igv = (function (igv) {
         var max = track.max;
         if (!max) max = 8;
         var min = 0;
-        var x = 49;
+        var x = pixelWidth - 1;
 
         igv.graphics.strokeLine(ctx, x, computeH(min, max, 0, track.maxheight), x, computeH(min, max, max, track.maxheight), font); // Offset
 

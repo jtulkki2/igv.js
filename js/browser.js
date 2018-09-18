@@ -1053,7 +1053,7 @@ var igv = (function (igv) {
             mouseDownX = lastMouseX;
             mousePageX = event.pageX;
 
-            if (coords.x >= 50 && coords.x < igv.browser.trackContainerDiv.clientWidth - 64) {
+            if (coords.x >= igv.browser.config.leftHandGutterWidth && coords.x < igv.browser.trackContainerDiv.clientWidth - 64) {
                 igv.grabMouse({
                     event: e,
                     onDrag: igv.throttle(mouseDrag, 10),
@@ -1071,7 +1071,7 @@ var igv = (function (igv) {
                 $element = igv.browser.$cursorTrackingGuide;
 
             xy = igv.translateMouseCoordinates(e, trackContainerDiv);
-            _left = Math.max(50, xy.x - 5);
+            _left = Math.max(igv.browser.config.leftHandGutterWidth, xy.x - 5);
 
             _left = Math.min(igv.browser.trackContainerDiv.clientWidth - 65, _left);
             $element.css({left: _left + 'px'});

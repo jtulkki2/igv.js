@@ -152,8 +152,8 @@ var igv = (function (igv) {
         for (var p = 2; p < track.maxLogP; p += 2) {
             var yp = pixelHeight - Math.round((p - track.minLogP) / yScale);
             // TODO: Dashes may not actually line up with correct scale. Ask Jim about this
-            igv.graphics.strokeLine(ctx, 45, yp - 2, 50, yp - 2, font); // Offset dashes up by 2 pixel
-            igv.graphics.fillText(ctx, p, 44, yp + 2, font); // Offset numbers down by 2 pixels;
+            igv.graphics.strokeLine(ctx, pixelWidth - 5, yp - 2, pixelWidth, yp - 2, font); // Offset dashes up by 2 pixel
+            igv.graphics.fillText(ctx, p, pixelWidth - 6, yp + 2, font); // Offset numbers down by 2 pixels;
         }
 
 

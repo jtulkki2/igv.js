@@ -150,7 +150,7 @@ var igv = (function (igv) {
             var y = self.samples[sample] * sampleHeight + border;
 
             if (sample == self.config.currentSample) {
-                igv.graphics.fillRect(ctx, 0, y - 1, 50, sampleHeight, {fillStyle: '#ccc'});
+                igv.graphics.fillRect(ctx, 0, y - 1, pixelWidth, sampleHeight, {fillStyle: '#ccc'});
             }
             igv.graphics.fillText(ctx, sample, 4, y + 9);
         });

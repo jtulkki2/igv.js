@@ -445,6 +445,7 @@ var igv = (function (igv) {
         if (config.flanking === undefined) config.flanking = 1000;
         if (config.pairsSupported === undefined) config.pairsSupported = true;
         if (config.type === undefined) config.type = "IGV";
+        if (config.leftHandGutterWidth === undefined) config.leftHandGutterWidth = 50;
 
         if (!config.tracks) {
             config.tracks = [];
