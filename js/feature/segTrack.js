@@ -38,6 +38,7 @@ var igv = (function (igv) {
         this.sampleExpandHeight = config.sampleExpandHeight || 12;
         this.isLog = true; // Force log scale (Added by JT)
         this.isCurrentSample = config.isCurrentSample || function() { return false; };
+        this.getSampleDisplayName = config.getSampleDisplayName || function(sample) { return sample; };
 
         this.posColorScale = config.posColorScale ||
             new igv.GradientColorScale(
@@ -153,7 +154,7 @@ var igv = (function (igv) {
             if (self.isCurrentSample(sample)) {
                 igv.graphics.fillRect(ctx, 0, y - 1, pixelWidth, sampleHeight, {fillStyle: '#ccc'});
             }
-            igv.graphics.fillText(ctx, sample, 4, y + 9);
+            igv.graphics.fillText(ctx, self.getSampleDisplayName(sample), 4, y + 9);
         });
     }
 
@@ -413,6 +414,7 @@ var igv = (function (igv) {
 
         var sampleHeight = ("SQUISHED" === this.displayMode) ? this.sampleSquishHeight : this.sampleExpandHeight,
             sampleName,
+            displayName,
             row,
             items;
 
@@ -421,9 +423,13 @@ var igv = (function (igv) {
         if (row < this.sampleNames.length) {
 
             sampleName = this.sampleNames[row];
+            displayName = this.getSampleDisplayName(sampleName);
+            if (displayName !== sampleName) {
+                displayName = displayName + ' (' + sampleName + ')';
+            }
 
             items = [
-                {name: "Sample", value: sampleName}
+                {name: "Sample", value: displayName}
             ];
 
             // We use the featureCache property rather than method to avoid async load.  If the
