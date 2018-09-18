@@ -37,6 +37,7 @@ var igv = (function (igv) {
         this.sampleSquishHeight = config.sampleSquishHeight || 2;
         this.sampleExpandHeight = config.sampleExpandHeight || 12;
         this.isLog = true; // Force log scale (Added by JT)
+        this.isCurrentSample = config.isCurrentSample || function() { return false; };
 
         this.posColorScale = config.posColorScale ||
             new igv.GradientColorScale(
@@ -149,7 +150,7 @@ var igv = (function (igv) {
         Object.keys(this.samples).forEach(function(sample) {
             var y = self.samples[sample] * sampleHeight + border;
 
-            if (sample == self.config.currentSample) {
+            if (self.isCurrentSample(sample)) {
                 igv.graphics.fillRect(ctx, 0, y - 1, pixelWidth, sampleHeight, {fillStyle: '#ccc'});
             }
             igv.graphics.fillText(ctx, sample, 4, y + 9);
@@ -254,14 +255,15 @@ var igv = (function (igv) {
             }
 
             // Indicate current sample
-            if (this.samples[this.config.currentSample] != undefined) {
-                y = this.samples[this.config.currentSample] * sampleHeight;
-                ctx.setLineDash([2, 3]);
-                igv.graphics.strokeLine(ctx, 0, y, pixelWidth, y);
-                igv.graphics.strokeLine(ctx, 0, y + sampleHeight - 1, pixelWidth, y + sampleHeight - 1);
-                ctx.setLineDash([]);
-//                igv.graphics.strokeRect(ctx, 0, y - 2, pixelWidth, sampleHeight + 2, {fillStyle: '#000'});
-            }
+            Object.keys(this.samples).forEach(function(sample) {
+                if (myself.isCurrentSample(sample)) {
+                    y = myself.samples[sample] * sampleHeight;
+                    ctx.setLineDash([2, 3]);
+                    igv.graphics.strokeLine(ctx, 0, y, pixelWidth, y);
+                    igv.graphics.strokeLine(ctx, 0, y + sampleHeight - 1, pixelWidth, y + sampleHeight - 1);
+                    ctx.setLineDash([]);
+                }
+            });
         }
         else {
             console.log("No feature list");
