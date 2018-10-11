@@ -544,17 +544,23 @@ var igv = (function (igv) {
         }
     };
 
-    igv.PromiseCache = function() {
-        cache = { };
+    igv.PromiseCache = function(logEvents) {
+        var items = this.items = { };
 
         this.fetch = function(key, callback) {
             var cacheName = JSON.stringify(key);
 
-            if (cache[cacheName]) {
-                return cache[cacheName];
+            if (items[cacheName]) {
+                if (logEvents) {
+                    console.log('CACHE HIT  ' + cacheName);
+                }
+                return items[cacheName];
+            }
+            if (logEvents) {
+                console.log('CACHE MISS ' + cacheName);
             }
 
-            return cache[cacheName] = new Promise(callback);
+            return items[cacheName] = new Promise(callback);
         }
     };
 
