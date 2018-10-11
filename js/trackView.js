@@ -172,6 +172,7 @@ var igv = (function (igv) {
         if ("hidden" === $(this.viewportDiv).css("overflow-y")) {
             this.scrollbar = new TrackScrollbar(this.viewportDiv, this.contentDiv, this.controlCanvas);
             this.scrollbar.update();
+            this.scrollbar.onScroll = function() { self.paintImage(); }
             $(this.viewportDiv).append(this.scrollbar.outerScrollDiv);
             // Added by JT 2017/10/17
             $(this.viewportDiv).bind( 'wheel', function (e) {
@@ -520,7 +521,8 @@ var igv = (function (igv) {
 
         if (this.tile) {
             this.xOffset = Math.round(this.browser.referenceFrame.toPixels(this.tile.startBP - this.browser.referenceFrame.start));
-            this.ctx.drawImage(this.tile.image, this.xOffset, 0);
+            this.yOffset = -this.scrollbar.position;
+            this.ctx.drawImage(this.tile.image, this.xOffset, this.yOffset);
             this.ctx.save();
             this.ctx.restore();
         }
@@ -723,7 +725,8 @@ var igv = (function (igv) {
      */
     TrackScrollbar = function (viewportDiv, contentDiv, controlCanvas) {
 
-        var outerScrollDiv = $('<div class="igv-scrollbar-outer-div">')[0],
+        var self = this,
+            outerScrollDiv = $('<div class="igv-scrollbar-outer-div">')[0],
             innerScrollDiv = $('<div class="igv-scrollbar-inner-div">')[0],
             offY;
 
@@ -735,6 +738,8 @@ var igv = (function (igv) {
         this.outerScrollDiv = outerScrollDiv;
         this.innerScrollDiv = innerScrollDiv;
         this.moveScrollerToY = moveScrollerTo;
+        this.position = 0;
+        this.onScroll = null;
 
         // Added by JT 2017/10/17
         this.scroll = function (change) {
@@ -784,12 +789,16 @@ var igv = (function (igv) {
         function moveScrollerTo(y) {
             var H = $(outerScrollDiv).height(),
                 h = $(innerScrollDiv).height();
-            newTop = Math.min(Math.max(0, y), H - h),
-                contentTop = -Math.round(newTop * ($(contentDiv).height() / $(viewportDiv).height()));
+
+            newTop = Math.min(Math.max(0, y), H - h);
+            self.position = Math.round(newTop * ($(contentDiv).height() / $(viewportDiv).height()));
+            contentTop = -self.position;
             $(innerScrollDiv).css("top", newTop + "px");
-            $(contentDiv).css("top", contentTop + "px");
             if (controlCanvas) {
                 $(controlCanvas).css("top", contentTop + "px");
+            }
+            if (self.onScroll) {
+                self.onScroll(self);
             }
         }
     }
