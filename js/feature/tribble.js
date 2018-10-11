@@ -130,7 +130,7 @@ var igv = (function (igv) {
                     if (nextPos > blockMax) blockMax = nextPos;
                 }
 
-                return {chr: chr, blocks: blocks};
+                return {chr: chr, binWidth: binWidth, longestFeature: longestFeature, blocks: blocks};
 
             }
 
@@ -157,8 +157,11 @@ var igv = (function (igv) {
 
         if (chrIdx) {
             var blocks = chrIdx.blocks,
-                lastBlock = blocks[blocks.length - 1],
-                mergedBlock = {minv: {block: blocks[0].min, offset: 0}, maxv: {block: lastBlock.max, offset: 0}};
+                minBin = clampBin(Math.floor((min - chrIdx.longestFeature) / chrIdx.binWidth)),
+                maxBin = clampBin(Math.ceil(max / chrIdx.binWidth)),
+                firstBlock = blocks[minBin],
+                lastBlock = blocks[maxBin],
+                mergedBlock = {minv: {block: firstBlock.min, offset: 0}, maxv: {block: lastBlock.max, offset: 0}};
 
             return [mergedBlock];
         }
@@ -166,7 +169,9 @@ var igv = (function (igv) {
             return null;
         }
 
-
+        function clampBin(bin) {
+            return Math.max(Math.min(bin, chrIdx.blocks.length - 1), 0);
+        }
     }
 
 
