@@ -309,23 +309,26 @@ var igv = (function (igv) {
         }
         if (tokens.length > 11) {
             exonCount = parseInt(tokens[9]);
-            exonSizes = tokens[10].split(',');
-            exonStarts = tokens[11].split(',');
-            exons = [];
+            if (exonCount > 0) {
+                exonSizes = tokens[10].split(',');
+                exonStarts = tokens[11].split(',');
+                exonCount = Math.min(exonCount, exonSizes.length, exonStarts.length);
+                exons = new Array(exonCount);
 
-            for (var i = 0; i < exonCount; i++) {
-                eStart = start + parseInt(exonStarts[i]);
-                eEnd = eStart + parseInt(exonSizes[i]);
-                var exon = {start: eStart, end: eEnd};
+                for (var i = 0; i < exonCount; i++) {
+                    eStart = start + parseInt(exonStarts[i]);
+                    eEnd = eStart + parseInt(exonSizes[i]);
+                    var exon = {start: eStart, end: eEnd};
 
-                if (feature.cdStart > eEnd || feature.cdEnd < feature.cdStart) exon.utr = true;   // Entire exon is UTR
-                if (feature.cdStart >= eStart && feature.cdStart <= eEnd) exon.cdStart = feature.cdStart;
-                if (feature.cdEnd >= eStart && feature.cdEnd <= eEnd) exon.cdEnd = feature.cdEnd;
+                    if (feature.cdStart > eEnd || feature.cdEnd < feature.cdStart) exon.utr = true;   // Entire exon is UTR
+                    if (feature.cdStart >= eStart && feature.cdStart <= eEnd) exon.cdStart = feature.cdStart;
+                    if (feature.cdEnd >= eStart && feature.cdEnd <= eEnd) exon.cdEnd = feature.cdEnd;
 
-                exons.push(exon);
+                    exons[i] = exon;
+                }
+
+                feature.exons = exons;
             }
-
-            feature.exons = exons;
         }
 
         feature.popupData = function () {
