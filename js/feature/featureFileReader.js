@@ -132,6 +132,17 @@ var igv = (function (igv) {
         //console.log("Using index");
         var self = this;
 
+        if (!self.asyncArray) {
+            var options = {
+                headers: self.config.headers,           // http headers, not file header
+                withCredentials: self.config.withCredentials
+            };
+            var file;
+
+            file = new asyncArray.openUrlBuffer(self.url, options);
+            self.asyncArray = new asyncArray.cache(new asyncArray.combineReads(file));
+        }
+
         return new Promise(function (fulfill, reject) {
 
             var blocks,
@@ -152,31 +163,33 @@ var igv = (function (igv) {
 
                         var startPos = block.minv.block,
                             startOffset = block.minv.offset,
-                            endPos = block.maxv.block + (index.tabix ? MAX_GZIP_BLOCK_SIZE : 0),
+                            blockSize = index.tabix ? (index.blockSizes[block.maxv.block] || MAX_GZIP_BLOCK_SIZE) : 0;
+                            endPos = block.maxv.block + blockSize,
                             options = {
                                 headers: self.config.headers,           // http headers, not file header
-                                range: {start: startPos, size: endPos - startPos + 1},
+                                range: {start: startPos, size: endPos - startPos},
                                 withCredentials: self.config.withCredentials
                             },
-                            success;
+                            success = function (data) {
 
-                        success = function (data) {
+                                var inflated, slicedData;
 
-                            var inflated, slicedData;
+                                if (data.byteLength === 0) {
+                                    fulfill([]);
+                                    return;
+                                }
+                                if (index.tabix) {
+                                    inflated = igvxhr.arrayBufferToString(igv.unbgzf(data));
+                                    // need to decompress data
+                                }
+                                else {
+                                    inflated = igvxhr.arrayBufferToString(data);
+                                }
 
-                            if (index.tabix) {
-
-                                inflated = igvxhr.arrayBufferToString(igv.unbgzf(data));
-                                // need to decompress data
-                            }
-                            else {
-                                inflated = data;
-                            }
-
-                            slicedData = startOffset ? inflated.slice(startOffset) : inflated;
-                            var f = self.parser.parseFeatures(slicedData);
-                            fulfill(f);
-                        };
+                                slicedData = startOffset ? inflated.slice(startOffset) : inflated;
+                                var f = self.parser.parseFeatures(slicedData);
+                                fulfill(f);
+                            };
 
 
                         // Async load
@@ -184,12 +197,7 @@ var igv = (function (igv) {
                             igvxhr.loadStringFromFile(self.localFile, options).then(success).catch(reject);
                         }
                         else {
-                            if (index.tabix) {
-                                igvxhr.loadArrayBuffer(self.url, options).then(success).catch(reject);
-                            }
-                            else {
-                                igvxhr.loadString(self.url, options).then(success).catch(reject);
-                            }
+                            self.asyncArray.read(startPos, endPos - startPos).then(success).catch(reject);
                         }
                     }));
                 });

@@ -619,6 +619,10 @@ var igv = (function (igv) {
         }
     };
 
+    igv.addStat = function(name, value) {
+        igv.stats[name] = (igv.stats[name] || 0) + value;
+    };
+    igv.stats = { };
     return igv;
 
 })(igv || {});

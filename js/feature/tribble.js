@@ -163,7 +163,13 @@ var igv = (function (igv) {
                 lastBlock = blocks[maxBin],
                 mergedBlock = {minv: {block: firstBlock.min, offset: 0}, maxv: {block: lastBlock.max, offset: 0}};
 
-            return [mergedBlock];
+//            return [mergedBlock].filter(function(block) { return block.max > block.min; });
+
+            return blocks.slice(minBin, maxBin + 1).filter(function(block) {
+                    return block.max > block.min;
+                }).map(function(block) {
+                    return {minv: {block: block.min, offset: 0}, maxv: {block: block.max, offset: 0}};
+                });
         }
         else {
             return null;

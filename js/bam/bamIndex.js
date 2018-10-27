@@ -32,7 +32,7 @@ var igv = (function (igv) {
                 var indices = [],
                     magic, nbin, nintv, nref, parser,
                     blockMin = Number.MAX_VALUE,
-                    blockMax = 0,
+                    blockMax = null,
                     binIndex, linearIndex, binNumber, cs, ce, b, i, ref, sequenceIndexMap;
 
                 if (!arrayBuffer) {
@@ -75,6 +75,10 @@ var igv = (function (igv) {
                         }
                     }
 
+                    var blockSizes = {};
+                    var prevBlock = 0;
+                    const MAX_GZIP_BLOCK_SIZE = (1 << 16);
+
                     for (ref = 0; ref < nref; ++ref) {
 
                         binIndex = {};
@@ -107,9 +111,12 @@ var igv = (function (igv) {
                                         if (cs.block < blockMin) {
                                             blockMin = cs.block;    // Block containing first alignment
                                         }
-                                        if (ce.block > blockMax) {
-                                            blockMax = ce.block;
+                                        if (!blockMax || ce.block > blockMax.block ||
+                                            ce.block == blockMax.block && ce.offset > blockMax.offset) {
+                                            blockMax = ce;
                                         }
+                                        blockSizes[cs.block] = null;
+                                        blockSizes[ce.block] = null;
                                         binIndex[binNumber].push([cs, ce]);
                                     }
                                 }
@@ -120,7 +127,34 @@ var igv = (function (igv) {
                         nintv = parser.getInt();
                         for (i = 0; i < nintv; i++) {
                             cs = parser.getVPointer();
-                            linearIndex.push(cs);   // Might be null
+                            linearIndex.push([cs, null]);   // Might be null
+                            if (cs) {
+                                blockSizes[cs.block] = null;
+                            }
+                        }
+
+                        Object.keys(binIndex).forEach(function(bin) {
+                            var index = binIndex[bin];
+                            var reg = bin2reg(bin);
+                            var i, j, lin, ce;
+
+                            for (i = 0; i < index.length; i++) {
+                                ce = index[i][1];
+                                lin = linearIndex[(reg.beg >> 14) - 1];
+                                if (lin && (!lin[1] || lin[1].block > ce.block ||
+                                    (lin[1].block == ce.block && lin[1].offset > ce.offset))) {
+                                    lin[1] = ce;
+                                }
+                            }
+                        });
+
+                        if (linearIndex.length > 0) {
+                            linearIndex[linearIndex.length - 1][1] = blockMax;
+                            for (i = linearIndex.length - 2; i >= 0; i--) {
+                                if (!linearIndex[i][1]) {
+                                    linearIndex[i][1] = linearIndex[i + 1][1];
+                                }
+                            }
                         }
 
                         if (nbin > 0) {
@@ -130,21 +164,40 @@ var igv = (function (igv) {
                             }
                         }
                     }
+                    var blocks = Object.keys(blockSizes)
+                        .map(function(block) { return +block; })
+                        .sort(function(a, b) { return a - b; });
+
+                    for (i = 0; i < blocks.length; i++) {
+                        if (blocks[i] > prevBlock + MAX_GZIP_BLOCK_SIZE) {
+                            blockSizes[prevBlock] = MAX_GZIP_BLOCK_SIZE;
+                        } else {
+                            blockSizes[prevBlock] = blocks[i] - prevBlock;
+                        }
+                        prevBlock = blocks[i];
+                    }
+
+
+                    if (blockSizes) {
+                        blockSizes[prevBlock] = MAX_GZIP_BLOCK_SIZE;
+                    }
 
                 } else {
                     throw new Error(indexURL + " is not a " + (tabix ? "tabix" : "bai") + " file");
                 }
-                fulfill(new igv.BamIndex(indices, blockMin, sequenceIndexMap, tabix));
+                fulfill(new igv.BamIndex(indices, blockMin, sequenceIndexMap, tabix, blockSizes, blocks));
             }).catch(reject);
         })
     }
 
 
-    igv.BamIndex = function (indices, blockMin, sequenceIndexMap, tabix) {
+    igv.BamIndex = function (indices, blockMin, sequenceIndexMap, tabix, blockSizes, blocks) {
         this.firstAlignmentBlock = blockMin;
         this.indices = indices;
         this.sequenceIndexMap = sequenceIndexMap;
         this.tabix = tabix;
+        this.blockSizes = blockSizes;
+        this.blocks = blocks;
 
     }
 
@@ -160,102 +213,37 @@ var igv = (function (igv) {
 
         var bam = this,
             ba = bam.indices[refId],
-            overlappingBins,
-            leafChunks,
-            otherChunks,
-            nintv,
-            lowest,
             minLin,
-            lb,
-            prunedOtherChunks,
+            maxLin,
             i,
-            chnk,
-            dif,
-            intChunks,
-            mergedChunks;
+            intChunks = [];
 
         if (!ba) {
-            return [];
+            return intChunks;
         }
         else {
 
-            overlappingBins = reg2bins(min, max);        // List of bin #s that might overlap min, max
-            leafChunks = [];
-            otherChunks = [];
+            l = ba.linearIndex;
+            minLin = Math.min(min >> 14, l.length - 1);
+            maxLin = Math.min(max >> 14, l.length - 1);
+            var chunk;
 
-
-            overlappingBins.forEach(function (bin) {
-
-                if (ba.binIndex[bin]) {
-                    var chunks = ba.binIndex[bin],
-                        nchnk = chunks.length;
-
-                    for (var c = 0; c < nchnk; ++c) {
-                        var cs = chunks[c][0];
-                        var ce = chunks[c][1];
-                        (bin < 4681 ? otherChunks : leafChunks).push({minv: cs, maxv: ce, bin: bin});
-                    }
-
-                }
+            intChunks.push({
+                minv: l[minLin][0],
+                maxv: l[maxLin][1]
             });
-
-            // Use the linear index to find the lowest chunk that could contain alignments in the region
-            nintv = ba.linearIndex.length;
-            lowest = null;
-            minLin = Math.min(min >> 14, nintv - 1), maxLin = Math.min(max >> 14, nintv - 1);
-            for (i = minLin; i <= maxLin; ++i) {
-                lb = ba.linearIndex[i];
-                if (!lb) {
-                    continue;
-                }
-                if (!lowest || lb.block < lowest.block || lb.offset < lowest.offset) {
-                    lowest = lb;
-                }
+/*            for (i = minLin; i <= maxLin; ++i) {
+                chunk = l[i];
+                var cs = chunk[0];
+                var ce = chunk[1];
+                intChunks.push({
+                    minv: cs,
+                    maxv: ce
+                });
             }
+*/
 
-            // Prune chunks that end before the lowest chunk
-            prunedOtherChunks = [];
-            if (lowest != null) {
-                for (i = 0; i < otherChunks.length; ++i) {
-                    chnk = otherChunks[i];
-                    if (chnk.maxv.block > lowest.block || (chnk.maxv.block == lowest.block && chnk.maxv.offset >= lowest.offset)) {
-                        prunedOtherChunks.push(chnk);
-                    }
-                }
-            }
-
-            intChunks = [];
-            for (i = 0; i < prunedOtherChunks.length; ++i) {
-                intChunks.push(prunedOtherChunks[i]);
-            }
-            for (i = 0; i < leafChunks.length; ++i) {
-                intChunks.push(leafChunks[i]);
-            }
-
-            intChunks.sort(function (c0, c1) {
-                dif = c0.minv.block - c1.minv.block;
-                if (dif != 0) {
-                    return dif;
-                } else {
-                    return c0.minv.offset - c1.minv.offset;
-                }
-            });
-
-            mergedChunks = [];
-            if (intChunks.length > 0) {
-                var cur = intChunks[0];
-                for (var i = 1; i < intChunks.length; ++i) {
-                    var nc = intChunks[i];
-                    if ((nc.minv.block - cur.maxv.block) < 65000) { // Merge blocks that are withing 65k of each other
-                        cur = {minv: cur.minv, maxv: nc.maxv};
-                    } else {
-                        mergedChunks.push(cur);
-                        cur = nc;
-                    }
-                }
-                mergedChunks.push(cur);
-            }
-            return mergedChunks;
+            return intChunks;
         }
 
     };
@@ -278,6 +266,20 @@ var igv = (function (igv) {
         return list;
     }
 
+    function bin2reg(bin) {
+        var length = 1 << 29;
+        var nbin = 1;
+
+        while (length >= 1 << 14) {
+            if (bin < nbin) {
+                return {beg: bin * length, end: (bin + 1) * length};
+            }
+            bin -= nbin;
+            nbin <<= 3;
+            length >>= 3;
+        }
+        return undefined;
+    }
 
     return igv;
 

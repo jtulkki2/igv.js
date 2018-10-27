@@ -28,6 +28,7 @@ var igv = (function (igv) {
      * @constructor
      */
     igv.BamReader = function (config) {
+        this.cache = new igv.PromiseCache();
 
         this.config = config;
 
@@ -68,6 +69,18 @@ var igv = (function (igv) {
 
                     alignmentContainer = new igv.AlignmentContainer(chr, bpStart, bpEnd, self.samplingWindowSize, self.samplingDepth, self.pairsSupported);
 
+                if (!self.source) {
+                    var options = {
+                        headers: self.config.headers,
+                        withCredentials: self.config.withCredentials
+                    };
+
+                    self.source =
+                        new asyncArray.decompressBgzf(
+                            new asyncArray.cache(new asyncArray.combineReads(
+                                new asyncArray.openUrlBuffer(self.bamPath, options))));
+                }
+
                 if (chrId === undefined) {
                     fulfill(alignmentContainer);
                 } else {
@@ -76,7 +89,6 @@ var igv = (function (igv) {
 
                         var chunks = bamIndex.blocksForRange(chrId, bpStart, bpEnd),
                             promises = [];
-
 
                         if (!chunks) {
                             fulfill(null);
@@ -90,34 +102,95 @@ var igv = (function (igv) {
 
                         chunks.forEach(function (c) {
 
-                            promises.push(new Promise(function (fulfill, reject) {
+                            promises.push(self.cache.fetch(c, function (fulfill, reject) {
 
                                 var fetchMin = c.minv.block,
-                                    fetchMax = c.maxv.block + MAX_GZIP_BLOCK_SIZE,   // Make sure we get the whole block.
-                                    range = {start: fetchMin, size: fetchMax - fetchMin + 1};
+                                    fetchMax = c.maxv.block;
 
-                                igvxhr.loadArrayBuffer(self.bamPath,
-                                    {
-                                        headers: self.config.headers,
-                                        range: range,
-                                        withCredentials: self.config.withCredentials
-                                    }).then(function (compressed) {
+                                self.source.read(fetchMin, fetchMax - fetchMin).then(function (blocks) {
+                                    var alignments = [];
+                                    var data = new ArrayBuffer(0);
+                                    var minOffset = c.minv.offset;
+                                    var i;
+                                    var block;
+                                    var ba;
 
-                                    var ba = new Uint8Array(igv.unbgzf(compressed)); //new Uint8Array(igv.unbgzf(compressed)); //, c.maxv.block - c.minv.block + 1));
-                                    decodeBamRecords(ba, c.minv.offset, alignmentContainer, bpStart, bpEnd, chrId, self.filter);
+                                    for (i = 0; i < blocks.length; i++) {
+                                        block = blocks[i];
+                                        if (data.byteLength > 0) {
+                                            ba = new Uint8Array(new ArrayBuffer(data.byteLength + block.data.byteLength));
 
-                                    fulfill(alignmentContainer);
+                                            ba.set(new Uint8Array(data), 0);
+                                            ba.set(new Uint8Array(block.data), data.byteLength);
+                                        } else {
+                                            ba = new Uint8Array(block.data);
+                                        }
+
+                                        var blockAlignments = [];
+                                        var offset;
+
+                                        if (minOffset == 0 && data.byteLength == 0 && block.alignments) {
+                                            blockAlignments = block.alignments;
+                                            offset = ba.byteLength;
+                                        } else {
+                                            var startTime  = performance.now();
+
+                                            offset = decodeBamRecords(blockAlignments, ba, minOffset, bpStart, bpEnd, chrId, self.filter);
+                                            igv.addStat('decodeTime', performance.now() - startTime);
+                                            igv.addStat('alignmentCount', blockAlignments.length);
+                                            igv.addStat('data', ba.byteLength);
+                                            if (minOffset == 0 && data.byteLength == 0 && offset == ba.byteLength) {
+                                                block.alignments = blockAlignments;
+                                            }
+                                        }
+
+                                        alignments.push(blockAlignments.filter(function(alignment) {
+                                            var refID = alignment.refID;
+                                            var pos = alignment.start;
+
+                                            if(refID < 0) {
+                                                return 0;   // unmapped reads
+                                            }
+                                            else if (refID > chrId || pos > bpEnd) {
+                                                return 0;    // off right edge
+                                            }
+                                            else if (refID < chrId || alignment.start + alignment.lengthOnRef < bpStart) {
+                                                return 0;   // to left of start
+                                            }
+                                            return 1;
+                                        }));
+
+                                        if (offset == -1) {
+                                            break;
+                                        }
+                                        data = ba.slice(offset);
+                                        minOffset = 0;
+                                    }
+
+                                    blocks.forEach(function(block) {
+                                    });
+
+                                    fulfill(alignments);
 
                                 }).catch(function (obj) {
                                     reject(obj);
                                 });
 
-                            }))
+                            }));
                         });
 
 
-                        Promise.all(promises).then(function (ignored) {
+                        Promise.all(promises).then(function (chunks) {
+                            var startTime = performance.now();
+                            chunks.forEach(function(alignments) {
+                                alignments.forEach(function(blockAlignments) {
+                                    blockAlignments.forEach(function(alignment) {
+                                        alignmentContainer.push(alignment);
+                                    });
+                                });
+                            });
                             alignmentContainer.finish();
+                            igv.addStat('alignmentContainerTime', performance.now() - startTime);
                             fulfill(alignmentContainer);
                         }).catch(function (obj) {
                             reject(obj);
@@ -128,7 +201,7 @@ var igv = (function (igv) {
         });
 
 
-        function decodeBamRecords(ba, offset, alignmentContainer, min, max, chrId, filter) {
+        function decodeBamRecords(alignments, ba, offset, min, max, chrId, filter) {
 
             var blockSize,
                 blockEnd,
@@ -162,23 +235,13 @@ var igv = (function (igv) {
                 blockEnd = offset + blockSize + 4;
 
                 if (blockEnd > ba.length) {
-                    return;
+                    break;
                 }
 
                 alignment = new igv.BamAlignment();
 
                 refID = readInt(ba, offset + 4);
                 pos = readInt(ba, offset + 8);
-
-                if(refID < 0) {
-                    return;   // unmapped reads
-                }
-                else if (refID > chrId || pos > max) {
-                    return;    // off right edge, we're done
-                }
-                else if (refID < chrId) {
-                    continue;   // to left of start, not sure this is possible
-                }
 
                 bmn = readInt(ba, offset + 12);
                 bin = (bmn & 0xffff0000) >> 16;
@@ -224,9 +287,6 @@ var igv = (function (igv) {
                 alignment.cigar = cigar;
                 alignment.lengthOnRef = lengthOnRef;
 
-                if (alignment.start + alignment.lengthOnRef < min) continue;  // Record out-of-range "to the left", skip to next one
-
-
                 seq = '';
                 seqBytes = (lseq + 1) >> 1;
                 for (j = 0; j < seqBytes; ++j) {
@@ -252,6 +312,7 @@ var igv = (function (igv) {
                 p += lseq;
 
 
+                alignment.refID = refID;
                 alignment.start = pos;
                 alignment.mq = mq;
                 alignment.readName = readName;
@@ -269,6 +330,11 @@ var igv = (function (igv) {
                 alignment.tagBA = new Uint8Array(ba.buffer.slice(p, blockEnd));  // decode thiese on demand
                 p += blockEnd;
 
+                blocks = makeBlocks(alignment, cigarArray);
+                alignment.blocks = blocks.blocks;
+                alignment.insertions = blocks.insertions;
+                alignments.push(alignment);
+/*
                 if (!min || alignment.start <= max &&
                     alignment.start + alignment.lengthOnRef >= min &&
                     filter.pass(alignment)) {
@@ -276,11 +342,12 @@ var igv = (function (igv) {
                         blocks = makeBlocks(alignment, cigarArray);
                         alignment.blocks = blocks.blocks;
                         alignment.insertions = blocks.insertions;
-                        alignmentContainer.push(alignment);
+                        alignments.push(alignment);
                     }
-                }
+                } */
                 offset = blockEnd;
             }
+            return offset;
             // Exits via top of loop.
         }
 

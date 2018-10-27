@@ -552,6 +552,8 @@ var igv = (function (igv) {
             packedAlignmentRows = alignmentContainer.packedAlignmentRows,
             sequence = alignmentContainer.sequence;
 
+        var startTime  = performance.now();
+
         if (this.top) ctx.translate(0, this.top);
 
         if (sequence) {
@@ -621,6 +623,7 @@ var igv = (function (igv) {
             });
         }
 
+        igv.addStat('BAM rendering time', performance.now() - startTime);
 
         // alignment is a PairedAlignment
         function drawPairConnector(alignment, yRect, alignmentHeight) {
