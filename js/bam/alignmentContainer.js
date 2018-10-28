@@ -111,6 +111,7 @@ var igv = (function (igv) {
 
         this.pairsCache = undefined;
         this.downsampledReads = undefined;
+        this.coverageMap.finish();
     }
 
     igv.AlignmentContainer.prototype.contains = function (chr, start, end) {
@@ -203,15 +204,33 @@ var igv = (function (igv) {
 
     }
 
+    var baseIdx = {
+        A: 1,
+        C: 2,
+        T: 3,
+        G: 4,
+        N: 5
+    };
 
     // TODO -- refactor this to use an object, rather than an array,  if end-start is > some threshold
     function CoverageMap(chr, start, end) {
+
+        var i;
 
         this.chr = chr;
         this.bpStart = start;
         this.length = (end - start);
 
         this.coverage = new Array(this.length);
+        this.posByBase = new Array(6);
+        this.negByBase = new Array(6);
+        this.qualByBase = new Array(6);
+
+        for (i = 0; i < 6; i++) {
+            this.posByBase[i] = new Int32Array(this.length);
+            this.negByBase[i] = new Int32Array(this.length);
+            this.qualByBase[i] = new Int32Array(this.length);
+        }
 
         this.maximum = 0;
 
@@ -219,9 +238,36 @@ var igv = (function (igv) {
         this.qualityWeight = true;
     }
 
+    CoverageMap.prototype.finish = function() {
+        var self = this;
+        var i, coverage, total, qual;
+
+        for (i = 0; i < self.coverage.length; i++) {
+            coverage = self.coverage[i] = new Coverage();
+            total = 0;
+            qual = 0;
+            Object.keys(baseIdx).forEach(function(base) {
+                var idx = baseIdx[base];
+
+                total += coverage["pos" + base] = self.posByBase[idx][i];
+                total += coverage["neg" + base] = self.negByBase[idx][i];
+                qual += coverage["qual" + base] = self.qualByBase[idx][i];
+            });
+            total += self.posByBase[0][i];
+            total += self.negByBase[0][i];
+            qual += self.qualByBase[0][i];
+            coverage.total = total;
+            coverage.qual = qual;
+            self.maximum = Math.max(coverage.total, self.maximum);
+        }
+    }
+
     CoverageMap.prototype.incCounts = function (alignment) {
 
         var self = this;
+        var coverageByBase = alignment.strand ? self.posByBase : self.negByBase;
+        var qualByBase = self.qualByBase;
+
 
         if (alignment.blocks === undefined) {
 
@@ -235,29 +281,18 @@ var igv = (function (igv) {
 
         function incBlockCount(block) {
 
-            var key,
-                base,
+            var base,
                 i,
                 j,
-                q;
+                seq = block.seq,
+                qual = block.qual;
 
             for (i = block.start - self.bpStart, j = 0; j < block.len; i++, j++) {
 
-                if (!self.coverage[i]) {
-                    self.coverage[i] = new Coverage();
-                }
+                base = baseIdx[seq.charAt(j)] || 0;
 
-                base = block.seq.charAt(j);
-                key = (alignment.strand) ? "pos" + base : "neg" + base;
-                q = block.qual[j];
-
-                self.coverage[i][key] += 1;
-                self.coverage[i]["qual" + base] += q;
-
-                self.coverage[i].total += 1;
-                self.coverage[i].qual += q;
-
-                self.maximum = Math.max(self.coverage[i].total, self.maximum);
+                coverageByBase[base][i]++;
+                qualByBase[base][i] += qual[j];
 
             }
         }
