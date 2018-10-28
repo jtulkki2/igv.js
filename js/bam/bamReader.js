@@ -6,6 +6,7 @@ var igv = (function (igv) {
     var BAM_MAGIC = 21840194;
     var BAI_MAGIC = 21578050;
     var SECRET_DECODER = ['=', 'A', 'C', 'x', 'G', 'x', 'x', 'x', 'T', 'x', 'x', 'x', 'x', 'x', 'x', 'N'];
+    var SECRET_DECODER_INT = new Uint8Array(SECRET_DECODER.map(function(s) { return s.charCodeAt(0); }));
     var CIGAR_DECODER = ['M', 'I', 'D', 'N', 'S', 'H', 'P', '=', 'X', '?', '?', '?', '?', '?', '?', '?'];
     var READ_STRAND_FLAG = 0x10;
     var MATE_STRAND_FLAG = 0x20;
@@ -182,6 +183,7 @@ var igv = (function (igv) {
 
                         Promise.all(promises).then(function (chunks) {
                             var startTime = performance.now();
+                            console.log(chunks);
                             chunks.forEach(function(alignments) {
                                 alignments.forEach(function(blockAlignments) {
                                     blockAlignments.forEach(function(alignment) {
@@ -261,16 +263,11 @@ var igv = (function (igv) {
                 matePos = readInt(ba, offset + 28);
                 alignment.fragmentLength = readInt(ba, offset + 32);
 
-                readName = '';
-                for (j = 0; j < nl - 1; ++j) {
-                    readName += String.fromCharCode(ba[offset + 36 + j]);
-                }
-
+                readName = String.fromCharCode.apply(null, ba.subarray(offset + 36, offset + 36 + nl - 1));
                 p = offset + 36 + nl;
 
                 lengthOnRef = 0;
                 cigar = '';
-
 
                 cigarArray = [];
                 for (c = 0; c < nc; ++c) {
@@ -287,14 +284,14 @@ var igv = (function (igv) {
                 alignment.cigar = cigar;
                 alignment.lengthOnRef = lengthOnRef;
 
-                seq = '';
+                seqArray = new Uint8Array(lseq);
                 seqBytes = (lseq + 1) >> 1;
                 for (j = 0; j < seqBytes; ++j) {
                     var sb = ba[p + j];
-                    seq += SECRET_DECODER[(sb & 0xf0) >> 4];
-                    seq += SECRET_DECODER[(sb & 0x0f)];
+                    seqArray[j * 2] = SECRET_DECODER_INT[(sb & 0xf0) >> 4];
+                    seqArray[j * 2 + 1] = SECRET_DECODER_INT[(sb & 0x0f)];
                 }
-                seq = seq.substring(0, lseq);  // seq might have one extra character (if lseq is an odd number)
+                seq = String.fromCharCode.apply(null, seqArray);
 
                 p += seqBytes;
                 alignment.seq = seq;
@@ -304,10 +301,7 @@ var igv = (function (igv) {
                     // TODO == how to represent this?
                 }
                 else {
-                    alignment.qual = [];
-                    for (j = 0; j < lseq; ++j) {
-                        alignment.qual.push(ba[p + j]);
-                    }
+                    alignment.qual = ba.slice(p, p + lseq);
                 }
                 p += lseq;
 
@@ -327,7 +321,7 @@ var igv = (function (igv) {
                 }
 
 
-                alignment.tagBA = new Uint8Array(ba.buffer.slice(p, blockEnd));  // decode thiese on demand
+                alignment.tagBA = new Uint8Array(ba.buffer.slice(p, blockEnd));  // decode these on demand
                 p += blockEnd;
 
                 blocks = makeBlocks(alignment, cigarArray);
@@ -399,7 +393,7 @@ var igv = (function (igv) {
                         break;
                     case 'I' :
                         blockSeq = record.seq === "*" ? "*" : record.seq.substr(seqOffset, c.len);
-                        blockQuals = record.qual ? record.qual.slice(seqOffset, c.len) : undefined;
+                        blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
                         if (insertions === undefined) insertions = [];
                         insertions.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals});
                         seqOffset += c.len;
@@ -410,7 +404,7 @@ var igv = (function (igv) {
                     case 'X' :
 
                         blockSeq = record.seq === "*" ? "*" : record.seq.substr(seqOffset, c.len);
-                        blockQuals = record.qual ? record.qual.slice(seqOffset, c.len) : undefined;
+                        blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
                         blocks.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals, gapType: gapType});
                         seqOffset += c.len;
                         pos += c.len;
