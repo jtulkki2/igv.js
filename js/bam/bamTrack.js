@@ -692,7 +692,7 @@ var igv = (function (igv) {
                     xBlockEnd = Math.round(((block.start + block.len) - bpStart) / bpPerPixel),
                     widthBlock = Math.max(1, xBlockEnd - xBlockStart),
                     widthArrowHead = self.alignmentRowHeight / 2.0,
-                    blockSeq = block.seq.toUpperCase(),
+                    blockSeq = block.seq,
                     skippedColor = self.skippedColor,
                     deletionColor = self.deletionColor,
                     refChar,

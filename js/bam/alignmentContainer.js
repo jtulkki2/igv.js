@@ -211,6 +211,17 @@ var igv = (function (igv) {
         G: 4,
         N: 5
     };
+    var baseCharCodeIdx = toCharCodeIdx(baseIdx);
+
+    function toCharCodeIdx(stringIdx) {
+        var idx = new Uint8Array(256);
+
+        Object.keys(stringIdx).forEach(function(key) {
+            idx[key.charCodeAt(0)] = stringIdx[key];
+        });
+
+        return idx;
+    }
 
     // TODO -- refactor this to use an object, rather than an array,  if end-start is > some threshold
     function CoverageMap(chr, start, end) {
@@ -260,6 +271,10 @@ var igv = (function (igv) {
             coverage.qual = qual;
             self.maximum = Math.max(coverage.total, self.maximum);
         }
+        // free up memory
+        this.posByBase = undefined;
+        this.negByBase = undefined;
+        this.qualByBase = undefined;
     }
 
     CoverageMap.prototype.incCounts = function (alignment) {
@@ -289,7 +304,7 @@ var igv = (function (igv) {
 
             for (i = block.start - self.bpStart, j = 0; j < block.len; i++, j++) {
 
-                base = baseIdx[seq.charAt(j)] || 0;
+                base = baseCharCodeIdx[seq.charCodeAt(j)];
 
                 coverageByBase[base][i]++;
                 qualByBase[base][i] += qual[j];

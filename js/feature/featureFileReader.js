@@ -163,7 +163,7 @@ var igv = (function (igv) {
 
                         var startPos = block.minv.block,
                             startOffset = block.minv.offset,
-                            blockSize = index.tabix ? (index.blockSizes[block.maxv.block] || MAX_GZIP_BLOCK_SIZE) : 0;
+                            blockSize = index.tabix ? MAX_GZIP_BLOCK_SIZE : 0;
                             endPos = block.maxv.block + blockSize,
                             options = {
                                 headers: self.config.headers,           // http headers, not file header

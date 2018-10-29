@@ -2097,7 +2097,6 @@ function adler32(adler, /* byte[] */ buf,  index, len){
 }
 
 
-
 function jszlib_inflate_buffer(buffer, start, length, afterUncOffset) {
     if (!start) {
         buffer = new Uint8Array(buffer);
@@ -2151,3 +2150,36 @@ function jszlib_inflate_buffer(buffer, start, length, afterUncOffset) {
         return out.buffer;
     }
 }
+
+function jszlib_inflate_buffer_monolithic(buffer, start, length, afterUncOffset, inputLength) {
+    if (!start) {
+        buffer = new Uint8Array(buffer);
+    } else {
+        buffer = new Uint8Array(buffer, start, length);
+    }
+
+    var z = new ZStream();
+    var obuf = new Uint8Array(inputLength);
+
+    z.inflateInit(DEF_WBITS, true);
+    z.next_in = buffer;
+    z.next_in_index = 0;
+    z.avail_in = buffer.length;
+
+    z.next_out = obuf;
+    z.next_out_index = 0;
+    z.avail_out = obuf.length;
+
+    var status = z.inflate(Z_NO_FLUSH);
+
+    if (status != Z_STREAM_END) {
+        throw z.msg;
+    }
+
+    if (afterUncOffset) {
+        afterUncOffset[0] = (start || 0) + z.next_in_index;
+    }
+
+    return obuf.buffer;
+}
+

@@ -196,8 +196,8 @@ var igv = (function (igv) {
         this.indices = indices;
         this.sequenceIndexMap = sequenceIndexMap;
         this.tabix = tabix;
-        this.blockSizes = blockSizes;
-        this.blocks = blocks;
+//        this.blockSizes = blockSizes;
+//        this.blocks = blocks;
 
     }
 

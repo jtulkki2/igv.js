@@ -315,8 +315,8 @@ var igvxhr = (function (igvxhr) {
         }
 
         var result = "";
-        for (var i = 0, len = plain.length; i < len; i++) {
-            result = result + String.fromCharCode(plain[i]);
+        for (var i = 0, len = plain.length; i < len; i += 10000) {
+            result = result + String.fromCharCode.apply(null, plain.subarray(i, i + 10000));
         }
         return result;
     };

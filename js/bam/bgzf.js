@@ -85,9 +85,13 @@ var igv = (function (igv) {
 
             if (data.byteLength < ptr[0] + bsize) break;
 
+            ba = new Uint8Array(data, ptr[0] + bsize - 8, 8);
+
+            var inputLength = ba[4] | (ba[5] << 8) | (ba[6] << 16) | (ba[7] << 24);
+
             ptr[0] = ptr[0] + bsize;    // Skipping CRC-32 and size of uncompressed data
 
-            oBlockList.push({start: blockStart, end: ptr[0]});
+            oBlockList.push({start: blockStart, end: ptr[0], inputLength: inputLength});
         }
 
         return oBlockList;

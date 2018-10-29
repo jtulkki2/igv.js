@@ -202,7 +202,6 @@ var igv = (function (igv) {
             }).catch(reject);
         });
 
-
         function decodeBamRecords(alignments, ba, offset, min, max, chrId, filter) {
 
             var blockSize,
@@ -223,6 +222,7 @@ var igv = (function (igv) {
                 matePos,
                 readName,
                 j,
+                k,
                 p,
                 lengthOnRef,
                 cigar,
@@ -231,7 +231,7 @@ var igv = (function (igv) {
                 seq,
                 seqBytes;
 
-            while (true) {
+            while (offset + 4 <= ba.length) {
 
                 blockSize = readInt(ba, offset);
                 blockEnd = offset + blockSize + 4;
@@ -269,7 +269,7 @@ var igv = (function (igv) {
                 lengthOnRef = 0;
                 cigar = '';
 
-                cigarArray = [];
+                cigarArray = new Array(nc);
                 for (c = 0; c < nc; ++c) {
                     var cigop = readInt(ba, p);
                     var opLen = (cigop >> 4);
@@ -279,32 +279,23 @@ var igv = (function (igv) {
                     cigar = cigar + opLen + opLtr;
                     p += 4;
 
-                    cigarArray.push({len: opLen, ltr: opLtr});
+                    cigarArray[c] = {len: opLen, ltr: opLtr};
                 }
                 alignment.cigar = cigar;
                 alignment.lengthOnRef = lengthOnRef;
 
-                seqArray = new Uint8Array(lseq);
                 seqBytes = (lseq + 1) >> 1;
-                for (j = 0; j < seqBytes; ++j) {
-                    var sb = ba[p + j];
-                    seqArray[j * 2] = SECRET_DECODER_INT[(sb & 0xf0) >> 4];
-                    seqArray[j * 2 + 1] = SECRET_DECODER_INT[(sb & 0x0f)];
-                }
-                seq = String.fromCharCode.apply(null, seqArray);
 
+                alignment.seq = new SequenceArray(ba.subarray(p, p + seqBytes), lseq);
                 p += seqBytes;
-                alignment.seq = seq;
-
 
                 if (lseq === 1 && String.fromCharCode(ba[p + j] + 33) === "*") {
                     // TODO == how to represent this?
                 }
                 else {
-                    alignment.qual = ba.slice(p, p + lseq);
+                    alignment.qual = ba.subarray(p, p + lseq);
                 }
                 p += lseq;
-
 
                 alignment.refID = refID;
                 alignment.start = pos;
@@ -321,24 +312,13 @@ var igv = (function (igv) {
                 }
 
 
-                alignment.tagBA = new Uint8Array(ba.buffer.slice(p, blockEnd));  // decode these on demand
-                p += blockEnd;
+                alignment.tagBA = ba.subarray(p, blockEnd);  // decode these on demand
 
                 blocks = makeBlocks(alignment, cigarArray);
                 alignment.blocks = blocks.blocks;
                 alignment.insertions = blocks.insertions;
                 alignments.push(alignment);
-/*
-                if (!min || alignment.start <= max &&
-                    alignment.start + alignment.lengthOnRef >= min &&
-                    filter.pass(alignment)) {
-                    if (chrId === undefined || refID == chrId) {
-                        blocks = makeBlocks(alignment, cigarArray);
-                        alignment.blocks = blocks.blocks;
-                        alignment.insertions = blocks.insertions;
-                        alignments.push(alignment);
-                    }
-                } */
+
                 offset = blockEnd;
             }
             return offset;
@@ -392,7 +372,7 @@ var igv = (function (igv) {
                         gapType = 'D';
                         break;
                     case 'I' :
-                        blockSeq = record.seq === "*" ? "*" : record.seq.substr(seqOffset, c.len);
+                        blockSeq = record.seq === "*" ? "*" : record.seq.subarray(seqOffset, seqOffset + c.len);
                         blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
                         if (insertions === undefined) insertions = [];
                         insertions.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals});
@@ -403,7 +383,7 @@ var igv = (function (igv) {
                     case '=' :
                     case 'X' :
 
-                        blockSeq = record.seq === "*" ? "*" : record.seq.substr(seqOffset, c.len);
+                        blockSeq = record.seq === "*" ? "*" : record.seq.subarray(seqOffset, seqOffset + c.len);
                         blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
                         blocks.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals, gapType: gapType});
                         seqOffset += c.len;
@@ -420,6 +400,31 @@ var igv = (function (igv) {
 
         }
     }
+
+    function SequenceArray(data, length, offset) {
+        this.data = data;
+        this.length = length;
+        this.offset = offset || 0;
+    }
+
+    SequenceArray.prototype.charCodeAt = function(index) {
+        var i = index + this.offset;
+        var sb = this.data[i >> 1];
+
+        if (i % 2 == 0) {
+            return SECRET_DECODER_INT[(sb & 0xf0) >> 4]
+        } else {
+            return SECRET_DECODER_INT[(sb & 0x0f)]
+        }
+    };
+
+    SequenceArray.prototype.charAt = function(index) {
+        return String.fromCharCode(this.charCodeAt(index));
+    };
+
+    SequenceArray.prototype.subarray = function(start, end) {
+        return new SequenceArray(this.data, end - start, this.offset + start);
+    };
 
     igv.BamReader.prototype.readHeader = function () {
 

@@ -57,7 +57,7 @@ var asyncArray = (function (asyncArray) {
             var end = Math.min(offset + src.length, dest.length);
 
             if (start < end) {
-                dest.set(src.slice(start - offset, end - offset), start);
+                dest.set(src.subarray(start - offset, end - offset), start);
             }
         }
 
@@ -149,6 +149,9 @@ var asyncArray = (function (asyncArray) {
             }
 
             return chunkPromise.then(function(chunk) {
+                if (offset === chunk.offset && length === chunk.length) {
+                    return chunk.data;
+                }
                 return chunk.data.slice(offset - chunk.offset, offset - chunk.offset + length);
             });
         }
@@ -188,7 +191,7 @@ var asyncArray = (function (asyncArray) {
                         addCachedBlock({
                             start: block.start + offset,
                             end: block.end + offset,
-                            data: jszlib_inflate_buffer(data, block.start + 18, block.end - block.start - 18, [0])
+                            data: jszlib_inflate_buffer_monolithic(data, block.start + 18, block.end - block.start - 18, [0], block.inputLength)
                         });
                     }
                 });
