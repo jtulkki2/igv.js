@@ -116,18 +116,12 @@ var igv = (function (igv) {
                 var nFeatures = parser.getInt();
 
                 // note the code below accounts for > 60% of the total time to read an index
-                var blocks = new Array();
-                var pos = parser.getLong();
-                var chrBegPos = pos;
 
-                var blocks = new Array();
-                for (var binNumber = 0; binNumber < nBins; binNumber++) {
-                    var nextPos = parser.getLong();
-                    var size = nextPos - pos;
-                    blocks.push({min: pos, max: nextPos}); //        {position: pos, size: size});
-                    pos = nextPos;
+                var blocks = new Float64Array(nBins + 1);
 
-                    if (nextPos > blockMax) blockMax = nextPos;
+                for (var binNumber = 0; binNumber <= nBins; binNumber++) {
+                    var pos = parser.getLong();
+                    blocks[binNumber] = pos;
                 }
 
                 return {chr: chr, binWidth: binWidth, longestFeature: longestFeature, blocks: blocks};
@@ -158,25 +152,25 @@ var igv = (function (igv) {
         if (chrIdx) {
             var blocks = chrIdx.blocks,
                 minBin = clampBin(Math.floor((min - chrIdx.longestFeature) / chrIdx.binWidth)),
-                maxBin = clampBin(Math.ceil(max / chrIdx.binWidth)),
-                firstBlock = blocks[minBin],
-                lastBlock = blocks[maxBin],
-                mergedBlock = {minv: {block: firstBlock.min, offset: 0}, maxv: {block: lastBlock.max, offset: 0}};
+                maxBin = clampBin(Math.ceil(max / chrIdx.binWidth));
 
-//            return [mergedBlock].filter(function(block) { return block.max > block.min; });
+            var matchingBlocks = [];
+            var i;
 
-            return blocks.slice(minBin, maxBin + 1).filter(function(block) {
-                    return block.max > block.min;
-                }).map(function(block) {
-                    return {minv: {block: block.min, offset: 0}, maxv: {block: block.max, offset: 0}};
-                });
+            for (i = minBin; i < maxBin; i++) {
+                if (blocks[i] < blocks[i + 1]) {
+                    matchingBlocks.push({minv: {block: blocks[i], offset: 0}, maxv: {block: blocks[i + 1], offset: 0}})
+                }
+            }
+
+            return matchingBlocks;
         }
         else {
             return null;
         }
 
         function clampBin(bin) {
-            return Math.max(Math.min(bin, chrIdx.blocks.length - 1), 0);
+            return Math.max(Math.min(bin, chrIdx.blocks.length - 2), 0);
         }
     }
 
