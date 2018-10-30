@@ -179,6 +179,9 @@ var igv = (function (igv) {
         return this.position;
     }
 
+    igv.BinaryParser.prototype.getBlock = function () {
+        return this.getUShort() + (this.getUInt() & 0xffffff) * 0x10000
+    }
 
     /**
      * Return a bgzip (bam and tabix) virtual pointer

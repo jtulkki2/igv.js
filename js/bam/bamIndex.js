@@ -32,7 +32,7 @@ var igv = (function (igv) {
                 var indices = [],
                     magic, nbin, nintv, nref, parser,
                     blockMin = Number.MAX_VALUE,
-                    blockMax = null,
+                    blockMax = 0,
                     binIndex, linearIndex, binNumber, cs, ce, b, i, ref, sequenceIndexMap;
 
                 if (!arrayBuffer) {
@@ -75,16 +75,41 @@ var igv = (function (igv) {
                         }
                     }
 
-                    var blockSizes = {};
-                    var prevBlock = 0;
-                    const MAX_GZIP_BLOCK_SIZE = (1 << 16);
-
                     for (ref = 0; ref < nref; ++ref) {
 
                         binIndex = {};
                         linearIndex = [];
 
                         nbin = parser.getInt();
+
+                        var binPosition = parser.position;
+
+                        for (b = 0; b < nbin; ++b) {
+
+                            binNumber = parser.getInt();
+
+                            if (binNumber == 37450) {
+                                parser.position += 4 + 8 * 4;
+                            }
+                            else {
+                                binIndex[binNumber] = [];
+                                var nchnk = parser.getInt(); // # of chunks for this bin
+
+                                parser.position += nchnk * 8 * 2;
+                            }
+                        }
+
+                        nintv = parser.getInt();
+                        linearStartOffset = new Uint32Array(nintv);
+                        linearStartBlock = new Float64Array(nintv);
+                        linearEndBlock = new Float64Array(nintv);
+                        for (i = 0; i < nintv; i++) {
+                            linearStartOffset[i] = parser.getUShort();
+                            linearStartBlock[i] = parser.getBlock();
+                        }
+
+                        var endPosition = parser.position;
+                        parser.position = binPosition;
 
                         for (b = 0; b < nbin; ++b) {
 
@@ -103,95 +128,57 @@ var igv = (function (igv) {
                                 
                                 binIndex[binNumber] = [];
                                 var nchnk = parser.getInt(); // # of chunks for this bin
+                                var reg = bin2reg(binNumber);
+                                var j = (reg.beg >> 14) - 1;
 
                                 for (i = 0; i < nchnk; i++) {
-                                    cs = parser.getVPointer();
-                                    ce = parser.getVPointer();
-                                    if (cs && ce) {
-                                        if (cs.block < blockMin) {
-                                            blockMin = cs.block;    // Block containing first alignment
-                                        }
-                                        if (!blockMax || ce.block > blockMax.block ||
-                                            ce.block == blockMax.block && ce.offset > blockMax.offset) {
-                                            blockMax = ce;
-                                        }
-                                        blockSizes[cs.block] = null;
-                                        blockSizes[ce.block] = null;
-                                        binIndex[binNumber].push([cs, ce]);
+                                    var startOffset = parser.getUShort();
+                                    var startBlock = parser.getBlock();
+                                    var endOffset = parser.getUShort();
+                                    var endBlock = parser.getBlock();
+
+                                    if (startBlock < blockMin) {
+                                        blockMin = startBlock;    // Block containing first alignment
+                                    }
+                                    if (endBlock > blockMax.block) {
+                                        blockMax = endBlock;
+                                    }
+                                    if (j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
+                                        linearEndBlock[j] = startBlock;
                                     }
                                 }
                             }
                         }
+                        parser.position = endPosition;
 
-
-                        nintv = parser.getInt();
-                        for (i = 0; i < nintv; i++) {
-                            cs = parser.getVPointer();
-                            linearIndex.push([cs, null]);   // Might be null
-                            if (cs) {
-                                blockSizes[cs.block] = null;
-                            }
-                        }
-
-                        Object.keys(binIndex).forEach(function(bin) {
-                            var index = binIndex[bin];
-                            var reg = bin2reg(bin);
-                            var i, j, lin, ce;
-
-                            for (i = 0; i < index.length; i++) {
-                                ce = index[i][1];
-                                lin = linearIndex[(reg.beg >> 14) - 1];
-                                if (lin && (!lin[1] || lin[1].block > ce.block ||
-                                    (lin[1].block == ce.block && lin[1].offset > ce.offset))) {
-                                    lin[1] = ce;
-                                }
-                            }
-                        });
-
-                        if (linearIndex.length > 0) {
-                            linearIndex[linearIndex.length - 1][1] = blockMax;
-                            for (i = linearIndex.length - 2; i >= 0; i--) {
-                                if (!linearIndex[i][1]) {
-                                    linearIndex[i][1] = linearIndex[i + 1][1];
+                        if (linearEndBlock.length > 0) {
+                            linearEndBlock[linearEndBlock.length - 1] = blockMax;
+                            for (i = linearEndBlock.length - 2; i >= 0; i--) {
+                                if (!linearEndBlock[i]) {
+                                    linearEndBlock[i] = linearEndBlock[i + 1];
                                 }
                             }
                         }
 
                         if (nbin > 0) {
                             indices[ref] = {
-                                binIndex: binIndex,
-                                linearIndex: linearIndex
+                                linearStartOffset: linearStartOffset,
+                                linearStartBlock: linearStartBlock,
+                                linearEndBlock: linearEndBlock
                             }
                         }
-                    }
-                    var blocks = Object.keys(blockSizes)
-                        .map(function(block) { return +block; })
-                        .sort(function(a, b) { return a - b; });
-
-                    for (i = 0; i < blocks.length; i++) {
-                        if (blocks[i] > prevBlock + MAX_GZIP_BLOCK_SIZE) {
-                            blockSizes[prevBlock] = MAX_GZIP_BLOCK_SIZE;
-                        } else {
-                            blockSizes[prevBlock] = blocks[i] - prevBlock;
-                        }
-                        prevBlock = blocks[i];
-                    }
-
-
-                    if (blockSizes) {
-                        blockSizes[prevBlock] = MAX_GZIP_BLOCK_SIZE;
                     }
 
                 } else {
                     throw new Error(indexURL + " is not a " + (tabix ? "tabix" : "bai") + " file");
                 }
-                fulfill(new igv.BamIndex(indices, blockMin, sequenceIndexMap, tabix, blockSizes, blocks));
+                fulfill(new igv.BamIndex(indices, blockMin, sequenceIndexMap, tabix));
             }).catch(reject);
         })
     }
 
 
-    igv.BamIndex = function (indices, blockMin, sequenceIndexMap, tabix, blockSizes, blocks) {
+    igv.BamIndex = function (indices, blockMin, sequenceIndexMap, tabix) {
         this.firstAlignmentBlock = blockMin;
         this.indices = indices;
         this.sequenceIndexMap = sequenceIndexMap;
@@ -223,25 +210,20 @@ var igv = (function (igv) {
         }
         else {
 
-            l = ba.linearIndex;
-            minLin = Math.min(min >> 14, l.length - 1);
-            maxLin = Math.min(max >> 14, l.length - 1);
-            var chunk;
+            var length = ba.linearStartBlock.length;
+            minLin = Math.min(min >> 14, length - 1);
+            maxLin = Math.min(max >> 14, length - 1);
 
             intChunks.push({
-                minv: l[minLin][0],
-                maxv: l[maxLin][1]
+                minv: {
+                    block: ba.linearStartBlock[minLin],
+                    offset: ba.linearStartOffset[minLin]
+                },
+                maxv: {
+                    block: ba.linearEndBlock[maxLin],
+                    offset: 0
+                }
             });
-/*            for (i = minLin; i <= maxLin; ++i) {
-                chunk = l[i];
-                var cs = chunk[0];
-                var ce = chunk[1];
-                intChunks.push({
-                    minv: cs,
-                    maxv: ce
-                });
-            }
-*/
 
             return intChunks;
         }
