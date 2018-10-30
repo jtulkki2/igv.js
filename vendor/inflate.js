@@ -2151,7 +2151,7 @@ function jszlib_inflate_buffer(buffer, start, length, afterUncOffset) {
     }
 }
 
-function jszlib_inflate_buffer_monolithic(buffer, start, length, afterUncOffset, inputLength) {
+function jszlib_inflate_buffer_to(buffer, start, length, afterUncOffset, output) {
     if (!start) {
         buffer = new Uint8Array(buffer);
     } else {
@@ -2159,7 +2159,7 @@ function jszlib_inflate_buffer_monolithic(buffer, start, length, afterUncOffset,
     }
 
     var z = new ZStream();
-    var obuf = new Uint8Array(inputLength);
+    var obuf = output;
 
     z.inflateInit(DEF_WBITS, true);
     z.next_in = buffer;

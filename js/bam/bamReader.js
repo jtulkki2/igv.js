@@ -78,8 +78,7 @@ var igv = (function (igv) {
 
                     self.source =
                         new asyncArray.decompressBgzf(
-                            new asyncArray.cache(new asyncArray.combineReads(
-                                new asyncArray.openUrlBuffer(self.bamPath, options))));
+                            new asyncArray.cache(new asyncArray.openUrlBuffer(self.bamPath, options)));
                 }
 
                 if (chrId === undefined) {
@@ -103,46 +102,46 @@ var igv = (function (igv) {
 
                         chunks.forEach(function (c) {
 
-                            promises.push(self.cache.fetch(c, function (fulfill, reject) {
+                            promises.push(new Promise(function (fulfill, reject) {
 
                                 var fetchMin = c.minv.block,
                                     fetchMax = c.maxv.block;
 
                                 self.source.read(fetchMin, fetchMax - fetchMin).then(function (blocks) {
                                     var alignments = [];
-                                    var data = new ArrayBuffer(0);
+                                    var data = new Uint8Array(0);
                                     var minOffset = c.minv.offset;
                                     var i;
                                     var block;
+                                    var outputBuffer = new Uint8Array(65536 * 2);
                                     var ba;
 
                                     for (i = 0; i < blocks.length; i++) {
                                         block = blocks[i];
-                                        if (data.byteLength > 0) {
-                                            ba = new Uint8Array(new ArrayBuffer(data.byteLength + block.data.byteLength));
-
-                                            ba.set(new Uint8Array(data), 0);
-                                            ba.set(new Uint8Array(block.data), data.byteLength);
-                                        } else {
-                                            ba = new Uint8Array(block.data);
-                                        }
 
                                         var blockAlignments = [];
-                                        var offset;
 
                                         if (minOffset == 0 && data.byteLength == 0 && block.alignments) {
                                             blockAlignments = block.alignments;
-                                            offset = ba.byteLength;
                                         } else {
                                             var startTime  = performance.now();
+                                            if (data.byteLength > 0) {
+                                                ba = outputBuffer.subarray(0, data.byteLength + block.uncompressedSize);
 
-                                            offset = decodeBamRecords(blockAlignments, ba, minOffset, bpStart, bpEnd, chrId, self.filter);
+                                                ba.set(data, 0);
+                                                block.decompress(ba.subarray(data.byteLength));
+                                            } else {
+                                                ba = outputBuffer.subarray(0, block.uncompressedSize);
+                                                block.decompress(ba);
+                                            }
+                                            var offset = decodeBamRecords(blockAlignments, ba, minOffset, self.filter);
                                             igv.addStat('decodeTime', performance.now() - startTime);
                                             igv.addStat('alignmentCount', blockAlignments.length);
                                             igv.addStat('data', ba.byteLength);
                                             if (minOffset == 0 && data.byteLength == 0 && offset == ba.byteLength) {
                                                 block.alignments = blockAlignments;
                                             }
+                                            data = ba.slice(offset);
                                         }
 
                                         alignments.push(blockAlignments.filter(function(alignment) {
@@ -161,15 +160,11 @@ var igv = (function (igv) {
                                             return 1;
                                         }));
 
-                                        if (offset == -1) {
+                                        if (blockAlignments.length > 0 && blockAlignments[blockAlignments.length - 1].start > bpEnd) {
                                             break;
                                         }
-                                        data = ba.slice(offset);
                                         minOffset = 0;
                                     }
-
-                                    blocks.forEach(function(block) {
-                                    });
 
                                     fulfill(alignments);
 
@@ -183,7 +178,6 @@ var igv = (function (igv) {
 
                         Promise.all(promises).then(function (chunks) {
                             var startTime = performance.now();
-                            console.log(chunks);
                             chunks.forEach(function(alignments) {
                                 alignments.forEach(function(blockAlignments) {
                                     blockAlignments.forEach(function(alignment) {
@@ -202,12 +196,11 @@ var igv = (function (igv) {
             }).catch(reject);
         });
 
-        function decodeBamRecords(alignments, ba, offset, min, max, chrId, filter) {
+        function decodeBamRecords(alignments, ba, offset, filter) {
 
             var blockSize,
                 blockEnd,
                 alignment,
-                blocks,
                 refID,
                 pos,
                 bmn,
@@ -220,15 +213,9 @@ var igv = (function (igv) {
                 lseq,
                 mateRefID,
                 matePos,
-                readName,
                 j,
                 k,
                 p,
-                lengthOnRef,
-                cigar,
-                c,
-                cigarArray,
-                seq,
                 seqBytes;
 
             while (offset + 4 <= ba.length) {
@@ -263,45 +250,34 @@ var igv = (function (igv) {
                 matePos = readInt(ba, offset + 28);
                 alignment.fragmentLength = readInt(ba, offset + 32);
 
-                readName = String.fromCharCode.apply(null, ba.subarray(offset + 36, offset + 36 + nl - 1));
+                alignment.refID = refID;
+                alignment.start = pos;
+                alignment.mq = mq;
+                alignment.chr = self.indexToChr[refID];
+
+                if (!filter.pass(alignment)) {
+                    offset = blockEnd;
+                    continue;
+                }
+
+                alignment.readName = String.fromCharCode.apply(null, ba.subarray(offset + 36, offset + 36 + nl - 1));
                 p = offset + 36 + nl;
 
-                lengthOnRef = 0;
-                cigar = '';
-
-                cigarArray = new Array(nc);
-                for (c = 0; c < nc; ++c) {
-                    var cigop = readInt(ba, p);
-                    var opLen = (cigop >> 4);
-                    var opLtr = CIGAR_DECODER[cigop & 0xf];
-                    if (opLtr == 'M' || opLtr == 'EQ' || opLtr == 'X' || opLtr == 'D' || opLtr == 'N' || opLtr == '=')
-                        lengthOnRef += opLen;
-                    cigar = cigar + opLen + opLtr;
-                    p += 4;
-
-                    cigarArray[c] = {len: opLen, ltr: opLtr};
-                }
-                alignment.cigar = cigar;
-                alignment.lengthOnRef = lengthOnRef;
+                cigarOffset = p;
+                p += nc * 4;
 
                 seqBytes = (lseq + 1) >> 1;
-
-                alignment.seq = new SequenceArray(ba.subarray(p, p + seqBytes), lseq);
+                alignment.seq = new SequenceArray(ba.slice(p, p + seqBytes), lseq);
                 p += seqBytes;
 
                 if (lseq === 1 && String.fromCharCode(ba[p + j] + 33) === "*") {
                     // TODO == how to represent this?
                 }
                 else {
-                    alignment.qual = ba.subarray(p, p + lseq);
+                    alignment.qual = ba.slice(p, p + lseq);
                 }
                 p += lseq;
-
-                alignment.refID = refID;
-                alignment.start = pos;
-                alignment.mq = mq;
-                alignment.readName = readName;
-                alignment.chr = self.indexToChr[refID];
+                makeBlocks(alignment, ba, cigarOffset, nc);
 
                 if (mateRefID >= 0) {
                     alignment.mate = {
@@ -312,11 +288,7 @@ var igv = (function (igv) {
                 }
 
 
-                alignment.tagBA = ba.subarray(p, blockEnd);  // decode these on demand
-
-                blocks = makeBlocks(alignment, cigarArray);
-                alignment.blocks = blocks.blocks;
-                alignment.insertions = blocks.insertions;
+                alignment.tagBA = ba.slice(p, blockEnd);  // decode these on demand
                 alignments.push(alignment);
 
                 offset = blockEnd;
@@ -337,68 +309,86 @@ var igv = (function (igv) {
          * @param cigarArray
          * @returns array of blocks
          */
-        function makeBlocks(record, cigarArray) {
+        function makeBlocks(alignment, ba, p, len) {
 
             var blocks = [],
                 insertions,
                 seqOffset = 0,
-                pos = record.start,
-                len = cigarArray.length,
-                blockSeq,
-                blockQuals,
+                pos = alignment.start,
+                seq = alignment.seq,
+                qual = alignment.qual,
                 gapType,
-                minQ = 5,  //prefs.getAsInt(PreferenceManager.SAM_BASE_QUALITY_MIN)
-                maxQ = 20; //prefs.getAsInt(PreferenceManager.SAM_BASE_QUALITY_MAX)
+                cigar = '';
 
             for (var i = 0; i < len; i++) {
+                var cigop = readInt(ba, p);
+                var opLen = (cigop >> 4);
+                var opLtr = CIGAR_DECODER[cigop & 0xf];
 
-                var c = cigarArray[i];
+                cigar = cigar + opLen + opLtr;
+                p += 4;
 
-                switch (c.ltr) {
+                switch (opLtr) {
                     case 'H' :
                         break; // ignore hard clips
                     case 'P' :
                         break; // ignore pads
                     case 'S' :
-                        seqOffset += c.len;
+                        seqOffset += opLen;
                         gapType = 'S';
                         break; // soft clip read bases
                     case 'N' :
-                        pos += c.len;
+                        pos += opLen;
                         gapType = 'N';
                         break;  // reference skip
                     case 'D' :
-                        pos += c.len;
+                        pos += opLen;
                         gapType = 'D';
                         break;
                     case 'I' :
-                        blockSeq = record.seq === "*" ? "*" : record.seq.subarray(seqOffset, seqOffset + c.len);
-                        blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
                         if (insertions === undefined) insertions = [];
-                        insertions.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals});
-                        seqOffset += c.len;
+                        insertions.push(makeBlock());
+                        seqOffset += opLen;
                         break;
                     case 'M' :
                     case 'EQ' :
                     case '=' :
                     case 'X' :
 
-                        blockSeq = record.seq === "*" ? "*" : record.seq.subarray(seqOffset, seqOffset + c.len);
-                        blockQuals = record.qual ? record.qual.subarray(seqOffset, seqOffset + c.len) : undefined;
-                        blocks.push({start: pos, len: c.len, seq: blockSeq, qual: blockQuals, gapType: gapType});
-                        seqOffset += c.len;
-                        pos += c.len;
+                        blocks.push(makeBlock(gapType));
+                        seqOffset += opLen;
+                        pos += opLen;
 
                         break;
 
                     default :
-                        console.log("Error processing cigar element: " + c.len + c.ltr);
+                        console.log("Error processing cigar element: " + opLen + opLtr);
                 }
             }
+            alignment.cigar = cigar;
+            alignment.blocks = blocks;
+            alignment.insertions = insertions;
+            alignment.lengthOnRef = pos - alignment.start;
 
-            return {blocks: blocks, insertions: insertions};
+            function makeBlock(gapType) {
+                var blockSeq = seq;
+                var blockQual = qual;
 
+                if (seqOffset !== 0 || opLen !== seq.length) {
+                    blockSeq = seq.subarray(seqOffset, seqOffset + opLen);
+                    blockQual = qual && qual.subarray(seqOffset, seqOffset + opLen);
+                }
+                return new AlignmentBlock(pos, opLen, blockSeq, blockQual, gapType)
+            }
         }
+    }
+
+    function AlignmentBlock(pos, len, seq, qual, gapType) {
+        this.start = pos;
+        this.len = len;
+        this.seq = seq;
+        this.qual = qual;
+        this.gapType = gapType;
     }
 
     function SequenceArray(data, length, offset) {

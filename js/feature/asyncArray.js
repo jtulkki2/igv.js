@@ -184,34 +184,23 @@ var asyncArray = (function (asyncArray) {
             return array.read(offset, length + MAX_GZIP_BLOCK_SIZE).then(function(data) {
                 var blocks = igv.unbgzfSplitBlocks(data);
 
-                var startTime  = performance.now();
                 blocks.forEach(function(block) {
                     if (block.start <= length && !cachedBlocksMap[block.start + offset]) {
-                        igv.addStat('uncompressLength', block.end - block.start);
                         addCachedBlock({
                             start: block.start + offset,
                             end: block.end + offset,
-                            data: jszlib_inflate_buffer_monolithic(data, block.start + 18, block.end - block.start - 18, [0], block.inputLength)
+                            uncompressedSize: block.inputLength,
+                            decompress: function(output) {
+                                var startTime  = performance.now();
+                                jszlib_inflate_buffer_to(data, block.start + 18, block.end - block.start - 18, [0], output);
+                                igv.addStat('uncompressLength', block.end - block.start);
+                                igv.addStat('uncompressTime', performance.now() - startTime);
+                            }
                         });
                     }
                 });
-                igv.addStat('uncompressTime', performance.now() - startTime);
                 return blocks;
             });
-        }
-
-        function readDataFromBlocks(blocks) {
-            var length = blocks.reduce(function(a, b) { return a + b.data.byteLength; }, 0);
-            var data = new ArrayBuffer(length);
-            var view = new Uint8Array(data);
-            var offset = 0;
-
-            blocks.forEach(function(block) {
-                view.set(new Uint8Array(block.data), offset);
-                offset += block.data.byteLength;
-            });
-
-            return data;
         }
 
         this.read = function(offset, length) {
@@ -233,7 +222,6 @@ var asyncArray = (function (asyncArray) {
 
             return Promise.all(emptyRanges.map(fetchBlocks)).then(function() {
                 return getBlocksInRange(start, end).sort(byPosition);
-//                return readDataFromBlocks(blocks, offset, length);
             });
         }
     }
