@@ -716,7 +716,7 @@ var igv = (function (igv) {
         center = this.referenceFrame.start + this.referenceFrame.bpPerPixel * viewportWidth / 2;
         widthBP = newScale * viewportWidth;
 
-        this.referenceFrame.start = Math.round(center - widthBP / 2);
+        this.referenceFrame.start = center - widthBP / 2;
 
         if (this.referenceFrame.start < 0) this.referenceFrame.start = 0;
         else if (this.referenceFrame.start > chrLength - widthBP) this.referenceFrame.start = chrLength - widthBP;
