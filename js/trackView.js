@@ -284,7 +284,7 @@ var igv = (function (igv) {
             contentDiv.style.width = contentWidth + "px";      // Not sure why css is not working for this
             canvas.style.width = contentWidth + "px";
             canvas.setAttribute('width', contentWidth);    //Must set the width & height of the canvas
-            this.update();
+            this.repaint();
         }
     };
 
