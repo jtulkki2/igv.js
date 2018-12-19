@@ -33,6 +33,7 @@ var igv = (function (igv) {
         var self = this,
             cssDisplay;
         
+        this.config = config;
         this.$container = $('<div class="igv-center-guide igv-center-guide-thin">');
         $parent.append(this.$container);
         this.$container.css("display", (config.showCenterGuide && true == config.showCenterGuide) ? "block" : "none");
@@ -66,15 +67,14 @@ var igv = (function (igv) {
             ls,
             ws,
             center,
-            ppb = Math.floor(1.0/igv.browser.referenceFrame.bpPerPixel),
-            x = this.$container.position.x;
+            ppb = Math.floor(1.0/igv.browser.referenceFrame.bpPerPixel);
 
-        center = x + this.$container.outerWidth()/2;
+        center = (this.config.leftHandGutterWidth - 50) / 2;
+        left = center - ppb/2;
+        ls = 'calc(50% + ' + left.toString() + 'px)';
 
         if (ppb > 1) {
 
-            left = center - ppb/2;
-            ls = left.toString() + 'px';
             ws = ppb.toString() + 'px';
             this.$container.css({ left:ls, width:ws });
 
@@ -82,8 +82,6 @@ var igv = (function (igv) {
             this.$container.addClass('igv-center-guide-wide');
         } else {
 
-            // ls = center.toString() + 'px';
-            ls = '50%';
             ws = '1px';
             this.$container.css({ left:ls, width:ws });
 

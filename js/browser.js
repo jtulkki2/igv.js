@@ -391,6 +391,21 @@ var igv = (function (igv) {
     igv.Browser.prototype.updateLayout = function () {
         var usedHeight = 62;
         var items = [];
+        var oldWidth = this.trackContainerWidth;
+        var newWidth = this.trackContainerDiv.clientWidth;
+
+        if (newWidth !== oldWidth) {
+            this.trackContainerWidth = newWidth;
+            if (oldWidth != null) {
+                var widthChange = newWidth - oldWidth;
+                var referenceFrame = this.referenceFrame;
+
+                if (referenceFrame) {
+                    referenceFrame.start -= widthChange / 2 * referenceFrame.bpPerPixel;
+                    this.updateLocusSearch(referenceFrame);
+                }
+            }
+        }
 
         if (this.updatingLayout) {
             return;
@@ -716,7 +731,7 @@ var igv = (function (igv) {
         center = this.referenceFrame.start + this.referenceFrame.bpPerPixel * viewportWidth / 2;
         widthBP = newScale * viewportWidth;
 
-        this.referenceFrame.start = Math.round(center - widthBP / 2);
+        this.referenceFrame.start = center - widthBP / 2;
 
         if (this.referenceFrame.start < 0) this.referenceFrame.start = 0;
         else if (this.referenceFrame.start > chrLength - widthBP) this.referenceFrame.start = chrLength - widthBP;
