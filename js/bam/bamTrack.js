@@ -489,6 +489,17 @@ var igv = (function (igv) {
             if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
             nameValues.push({name: 'N', value: tmp});
 
+            if (coverage.posDel + coverage.negDel > 0 || coverage.posIns + coverage.negIns > 0) {
+                // Del
+                tmp = coverage.posDel + coverage.negDel;
+                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / (coverage.total + tmp)) * 100.0) + "%)";
+                nameValues.push({name: 'Del', value: tmp});
+
+                // Ins
+                tmp = coverage.posIns + coverage.negIns;
+                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+                nameValues.push({name: 'Ins', value: tmp});
+            }
         }
 
 

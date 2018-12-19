@@ -233,11 +233,11 @@ var igv = (function (igv) {
         this.length = (end - start);
 
         this.coverage = new Array(this.length);
-        this.posByBase = new Array(6);
-        this.negByBase = new Array(6);
-        this.qualByBase = new Array(6);
+        this.posByBase = new Array(8);
+        this.negByBase = new Array(8);
+        this.qualByBase = new Array(8);
 
-        for (i = 0; i < 6; i++) {
+        for (i = 0; i < 8; i++) {
             this.posByBase[i] = new Int32Array(this.length);
             this.negByBase[i] = new Int32Array(this.length);
             this.qualByBase[i] = new Int32Array(this.length);
@@ -267,6 +267,10 @@ var igv = (function (igv) {
             total += self.posByBase[0][i];
             total += self.negByBase[0][i];
             qual += self.qualByBase[0][i];
+            coverage.negDel = self.negByBase[6][i];
+            coverage.posDel = self.posByBase[6][i];
+            coverage.negIns = self.negByBase[7][i];
+            coverage.posIns = self.posByBase[7][i];
             coverage.total = total;
             coverage.qual = qual;
             self.maximum = Math.max(coverage.total, self.maximum);
@@ -282,6 +286,7 @@ var igv = (function (igv) {
         var self = this;
         var coverageByBase = alignment.strand ? self.posByBase : self.negByBase;
         var qualByBase = self.qualByBase;
+        var prevBlockEnd = null;
 
 
         if (alignment.blocks === undefined) {
@@ -290,8 +295,19 @@ var igv = (function (igv) {
         }
         else {
             alignment.blocks.forEach(function (block) {
+                if (block.gapType === 'D' && prevBlockEnd != null) {
+                    for (var i = prevBlockEnd; i < block.start; i++) {
+                        coverageByBase[6][i - self.bpStart]++;
+                    }
+                }
                 incBlockCount(block);
+                prevBlockEnd = block.start + block.len;
             });
+            if (alignment.insertions) {
+                alignment.insertions.forEach(function (block) {
+                    coverageByBase[7][block.start - self.bpStart]++;
+                });
+            }
         }
 
         function incBlockCount(block) {
@@ -322,12 +338,18 @@ var igv = (function (igv) {
 
         this.posC = 0;
         this.negC = 0;
-        this.posG = 0;
 
+        this.posG = 0;
         this.negG = 0;
 
         this.posN = 0;
         this.negN = 0;
+
+        this.posDel = 0;
+        this.negDel = 0;
+
+        this.posIns = 0;
+        this.negIns = 0;
 
         this.pos = 0;
         this.neg = 0;
