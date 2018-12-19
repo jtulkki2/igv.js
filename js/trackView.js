@@ -685,7 +685,7 @@ var igv = (function (igv) {
                                 return;
                             }
                             xOrigin = Math.round(referenceFrame.toPixels((trackView.tile.startBP - referenceFrame.start)));
-                            popupData = trackView.track.popupData(genomicLocation, canvasCoords.x - xOrigin, canvasCoords.y);
+                            popupData = trackView.track.popupData(genomicLocation, canvasCoords.x - xOrigin, canvasCoords.y - trackView.yOffset);
 
                             var handlerResult = igv.browser.fireEvent('trackclick', [trackView.track, popupData]);
 
