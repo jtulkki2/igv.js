@@ -143,8 +143,8 @@ var igv = (function (igv) {
                                     if (endBlock > blockMax.block) {
                                         blockMax = endBlock;
                                     }
-                                    if (j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
-                                        linearEndBlock[j] = startBlock;
+                                    if (j >= 0 && j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
+                                        linearEndBlock[j] = startBlock + 65536;
                                     }
                                 }
                             }
