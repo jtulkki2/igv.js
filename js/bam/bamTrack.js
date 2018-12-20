@@ -439,6 +439,12 @@ var igv = (function (igv) {
                         igv.graphics.fillRect(ctx, x, y, w, hh);
                     });
                 }
+                if (item.posDel > 0 || item.negDel > 0) {
+                    hh = Math.round(((item.posDel + item.negDel) / this.dataRange.max) * this.height);
+                    y = this.height - hh - h;
+                    igv.graphics.setProperties(ctx, {fillStyle: "#ddd"});
+                    igv.graphics.fillRect(ctx, x, y, w, hh);
+                }
             }
         }
 
@@ -458,46 +464,47 @@ var igv = (function (igv) {
 
         if (coverage) {
 
+            var total = coverage.total + coverage.posDel + coverage.negDel;
 
             nameValues.push(igv.browser.referenceFrame.chr + ":" + igv.numberFormatter(1 + genomicLocation));
 
-            nameValues.push({name: 'Total Count', value: coverage.total});
+            nameValues.push({name: 'Total Count', value: total});
 
             // A
             tmp = coverage.posA + coverage.negA;
-            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor(((coverage.posA + coverage.negA) / coverage.total) * 100.0) + "%)";
+            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
             nameValues.push({name: 'A', value: tmp});
 
 
             // C
             tmp = coverage.posC + coverage.negC;
-            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
             nameValues.push({name: 'C', value: tmp});
 
             // G
             tmp = coverage.posG + coverage.negG;
-            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
             nameValues.push({name: 'G', value: tmp});
 
             // T
             tmp = coverage.posT + coverage.negT;
-            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
             nameValues.push({name: 'T', value: tmp});
 
             // N
             tmp = coverage.posN + coverage.negN;
-            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+            if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
             nameValues.push({name: 'N', value: tmp});
 
             if (coverage.posDel + coverage.negDel > 0 || coverage.posIns + coverage.negIns > 0) {
                 // Del
                 tmp = coverage.posDel + coverage.negDel;
-                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / (coverage.total + tmp)) * 100.0) + "%)";
+                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
                 nameValues.push({name: 'Del', value: tmp});
 
                 // Ins
                 tmp = coverage.posIns + coverage.negIns;
-                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.floor((tmp / coverage.total) * 100.0) + "%)";
+                if (tmp > 0)  tmp = tmp.toString() + " (" + Math.round((tmp / total) * 100.0) + "%)";
                 nameValues.push({name: 'Ins', value: tmp});
             }
         }
