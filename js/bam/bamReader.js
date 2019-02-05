@@ -61,6 +61,7 @@ var igv = (function (igv) {
 
         var self = this;
 
+
         return new Promise(function (fulfill, reject) {
 
 
@@ -69,6 +70,7 @@ var igv = (function (igv) {
                 var chrId = chrToIndex[chr],
 
                     alignmentContainer = new igv.AlignmentContainer(chr, bpStart, bpEnd, self.samplingWindowSize, self.samplingDepth, self.pairsSupported);
+
 
                 if (!self.source) {
                     var options = {
@@ -424,7 +426,8 @@ var igv = (function (igv) {
 
             getIndex(self).then(function (index) {
 
-                var len = index.firstAlignmentBlock + MAX_GZIP_BLOCK_SIZE;   // Insure we get the complete compressed block containing the header
+                var len = (index.firstAlignmentBlock == null ? 0 : index.firstAlignmentBlock) +
+                    MAX_GZIP_BLOCK_SIZE; // Insure we get the complete compressed block containing the header
 
                 igvxhr.loadArrayBuffer(self.bamPath,
                     {
@@ -435,7 +438,7 @@ var igv = (function (igv) {
                         withCredentials: self.config.withCredentials
                     }).then(function (compressedBuffer) {
 
-                    var unc = igv.unbgzf(compressedBuffer, len),
+                    var unc = igv.unbgzf(compressedBuffer, compressedBuffer.length),
                         uncba = new Uint8Array(unc),
                         magic = readInt(uncba, 0),
                         samHeaderLen = readInt(uncba, 4),
