@@ -32,7 +32,7 @@ var igv = (function (igv) {
                 var indices = [],
                     magic, nbin, nintv, nref, parser,
                     blockMin = null,
-                    blockMax = null,
+                    blockMax = 0,
                     binIndex, linearIndex, binNumber, cs, ce, b, i, ref, sequenceIndexMap;
 
                 if (!arrayBuffer) {
@@ -140,7 +140,7 @@ var igv = (function (igv) {
                                     if (blockMin == null || startBlock < blockMin) {
                                         blockMin = startBlock;    // Block containing first alignment
                                     }
-                                    if (blockMax == null || endBlock > blockMax.block) {
+                                    if (endBlock > blockMax) {
                                         blockMax = endBlock;
                                     }
                                     if (j >= 0 && j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
