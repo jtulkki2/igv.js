@@ -29,6 +29,7 @@ var igvxhr = (function (igvxhr) {
     const NONE = 0;
     const GZIP = 1;
     const BGZF = 2;
+    const MAX_RANGE_SIZE = 100000000;
 
     igvxhr.cache = new igv.PromiseCache();
 
@@ -83,6 +84,9 @@ var igvxhr = (function (igvxhr) {
             xhr.open(method, url);
 
             if (range) {
+                if (range.size > MAX_RANGE_SIZE) {
+                    handleError("Range is too long to download (" + range.size + "bytes) ");
+                }
                 var rangeEnd = range.size ? range.start + range.size - 1 : "";
                 xhr.setRequestHeader("Range", "bytes=" + range.start + "-" + rangeEnd);
             }
