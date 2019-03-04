@@ -28,7 +28,7 @@
  */
 
 var igv = (function (igv) {
-
+    "use strict";
 
     /**
      * @param url - url to the webservice

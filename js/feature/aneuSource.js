@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     /**
      * feature source for "bed like" files (tab delimited files with 1 feature per line: bed, gff, vcf, etc)

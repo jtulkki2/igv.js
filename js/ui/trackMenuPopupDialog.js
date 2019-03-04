@@ -27,6 +27,7 @@
  * Created by turner on 12/11/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.TrackMenuPopupDialog = function (trackMenu, dialogLabel, inputValue, ok, width, height) {
 

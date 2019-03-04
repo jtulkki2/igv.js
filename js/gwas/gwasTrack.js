@@ -27,6 +27,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     const DEFAULT_POPOVER_WINDOW = 100000000;
 

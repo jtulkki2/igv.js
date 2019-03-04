@@ -28,6 +28,7 @@
 //
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.IdeoPanel = function (parentElement) {
 

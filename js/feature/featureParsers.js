@@ -34,6 +34,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     var maxFeatureCount = Number.MAX_VALUE;    // For future use,  controls downsampling
 

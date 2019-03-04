@@ -2,6 +2,7 @@
 // Code is based heavily on bam.js, part of the Dalliance Genome Explorer,  (c) Thomas Down 2006-2001.
 
 var igv = (function (igv) {
+    "use strict";
 
     var BAM_MAGIC = 21840194;
     var BAI_MAGIC = 21578050;
@@ -218,6 +219,7 @@ var igv = (function (igv) {
                 j,
                 k,
                 p,
+                cigarOffset,
                 seqBytes;
 
             while (offset + 4 <= ba.length) {

@@ -27,6 +27,7 @@
  * Created by turner on 9/19/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.Popover = function ($parent, id) {
 

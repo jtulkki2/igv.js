@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var BAM_MAGIC = 21840194;
     var BAI_MAGIC = 21578050;

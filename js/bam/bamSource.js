@@ -24,7 +24,7 @@
  */
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.BamSource = function (config) {
 

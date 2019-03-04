@@ -29,6 +29,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     var BIGWIG_MAGIC_LTH = 0x888FFC26; // BigWig Magic Low to High
     var BIGWIG_MAGIC_HTL = 0x26FC8F66; // BigWig Magic High to Low

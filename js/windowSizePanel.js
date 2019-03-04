@@ -27,6 +27,7 @@
  * Created by turner on 5/22/15.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.WindowSizePanel = function ($parent) {
 

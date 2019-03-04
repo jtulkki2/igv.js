@@ -32,6 +32,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var query1 = "https://www.encodeproject.org/search/?" +
         "type=experiment&" +

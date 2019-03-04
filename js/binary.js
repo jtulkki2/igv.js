@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     // TODO -- big endian
 

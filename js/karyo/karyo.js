@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var log = function (txt) {
         // if (console) console.log("karyo: " + txt);

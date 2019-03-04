@@ -27,6 +27,7 @@
  * Created by turner on 3/21/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.CoverageMap = function (chr, start, end, alignments, refSeq) {
 

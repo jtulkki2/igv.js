@@ -27,6 +27,7 @@
  * Created by turner on 2/10/15.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.BamAlignmentRow = function () {
 

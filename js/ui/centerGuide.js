@@ -28,6 +28,7 @@
  * Created by dat on 9/1/16.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.CenterGuide = function ($parent, config) {
         var self = this,

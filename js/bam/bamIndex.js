@@ -2,7 +2,7 @@
 // Code is based heavily on bam.js, part of the Dalliance Genome Explorer,  (c) Thomas Down 2006-2001.
 
 var igv = (function (igv) {
-
+    "use strict";
 
     const BAI_MAGIC = 21578050;
     const TABIX_MAGIC = 21578324;
@@ -100,9 +100,9 @@ var igv = (function (igv) {
                         }
 
                         nintv = parser.getInt();
-                        linearStartOffset = new Uint32Array(nintv);
-                        linearStartBlock = new Float64Array(nintv);
-                        linearEndBlock = new Float64Array(nintv);
+                        var linearStartOffset = new Uint32Array(nintv);
+                        var linearStartBlock = new Float64Array(nintv);
+                        var linearEndBlock = new Float64Array(nintv);
                         for (i = 0; i < nintv; i++) {
                             linearStartOffset[i] = parser.getUShort();
                             linearStartBlock[i] = parser.getBlock();

@@ -24,7 +24,7 @@
  */
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.EqtlTrack = function (config) {
 
@@ -238,7 +238,7 @@ var igv = (function (igv) {
         }
     }
 
-    GtexSelection = function (selection) {
+    function GtexSelection(selection) {
 
         this.geneColors = {};
         this.gene = null;

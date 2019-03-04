@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.SequenceTrack = function (config) {
         this.name = "";

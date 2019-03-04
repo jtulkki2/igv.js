@@ -26,7 +26,7 @@
 // Reference frame classes.  Converts domain coordinates (usually genomic) to pixel coordinates
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.ReferenceFrame = function (chr, start, bpPerPixel) {
         this.chr = chr;

@@ -29,7 +29,7 @@
 
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.BWTotalSummary = function (byteBuffer) {
 

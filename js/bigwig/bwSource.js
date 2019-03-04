@@ -29,6 +29,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.BWSource = function (config) {
 

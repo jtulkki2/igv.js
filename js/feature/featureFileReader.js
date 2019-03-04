@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     const MAX_GZIP_BLOCK_SIZE = (1 << 16);
 

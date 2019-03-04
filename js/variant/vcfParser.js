@@ -29,7 +29,7 @@
  */
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.VcfParser = function () {
 
@@ -165,7 +165,8 @@ var igv = (function (igv) {
      */
     igv.VcfParser.prototype.parseFeatures = function (data) {
 
-        var lines = data.split("\n"),
+        var self = this,
+            lines = data.split("\n"),
             allFeatures = [],
             callSets = this.header.callSets;
 
@@ -183,7 +184,7 @@ var igv = (function (igv) {
 
                 if (tokens.length >= 8) {
                     variant = new Variant(tokens);
-                    variant.header = this.header;       // Keep a pointer to the header to interpret fields for popup text
+                    variant.header = self.header;       // Keep a pointer to the header to interpret fields for popup text
                     allFeatures.push(variant);
 
                     if (tokens.length > 9) {

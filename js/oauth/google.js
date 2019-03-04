@@ -2,6 +2,7 @@
  * OAuth object provided for example pages.
  */
 var oauth = (function (oauth) {
+    "use strict";
 
     // Define singleton object for google oauth
 

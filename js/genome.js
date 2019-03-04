@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.Genome = function (sequence, ideograms, aliases) {
 

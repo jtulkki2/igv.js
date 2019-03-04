@@ -27,6 +27,7 @@
  * Created by turner on 4/15/15.
  */
 var igv = (function (igv) {
+    "use strict";
 
     var columnCount = 8;
 

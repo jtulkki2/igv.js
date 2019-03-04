@@ -32,7 +32,7 @@
 //
 
 var igv = (function (igv) {
-
+    "use strict";
 
     var debug = false;
 

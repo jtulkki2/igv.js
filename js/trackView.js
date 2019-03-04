@@ -25,6 +25,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.TrackView = function (track, browser) {
 
@@ -723,7 +724,7 @@ var igv = (function (igv) {
      * Creates a vertical scrollbar to slide an inner "contentDiv" with respect to an enclosing "viewportDiv"
      *
      */
-    TrackScrollbar = function (viewportDiv, contentDiv, controlCanvas) {
+    function TrackScrollbar(viewportDiv, contentDiv, controlCanvas) {
 
         var self = this,
             outerScrollDiv = $('<div class="igv-scrollbar-outer-div">')[0],
@@ -790,9 +791,9 @@ var igv = (function (igv) {
             var H = $(outerScrollDiv).height(),
                 h = $(innerScrollDiv).height();
 
-            newTop = Math.min(Math.max(0, y), H - h);
+            var newTop = Math.min(Math.max(0, y), H - h);
             self.position = Math.round(newTop * ($(contentDiv).height() / $(viewportDiv).height()));
-            contentTop = -self.position;
+            var contentTop = -self.position;
             $(innerScrollDiv).css("top", newTop + "px");
             if (controlCanvas) {
                 $(controlCanvas).css("top", contentTop + "px");

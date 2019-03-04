@@ -29,6 +29,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var vGap = 2;
     var DEFAULT_VISIBILITY_WINDOW = 100000;
@@ -178,7 +179,7 @@ var igv = (function (igv) {
             pixelHeight = options.pixelHeight,
             bpEnd = bpStart + pixelWidth * bpPerPixel + 1,
             callHeight = ("EXPANDED" === this.displayMode ? this.expandedCallHeight : this.squishedCallHeight),
-            px, px1, pw, py, h, style, i, variant, call, callSet, j, allRef, allVar, callSets;
+            px, px1, pw, py, h, style, i, len, variant, call, callSet, j, allRef, allVar, callSets;
 
         this.variantBandHeight = 5 + this.nRows * (this.variantHeight + vGap);
 

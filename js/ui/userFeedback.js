@@ -27,6 +27,7 @@
  * Created by turner on 3/18/15.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.UserFeedback = function (parentObject) {
 

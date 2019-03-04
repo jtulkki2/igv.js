@@ -3,6 +3,8 @@
  */
 
 var asyncArray = (function (asyncArray) {
+    "use strict";
+
     asyncArray.openUrlBuffer = function(url, options) {
         this.read = function(offset, length) {
             if (length == 0) {

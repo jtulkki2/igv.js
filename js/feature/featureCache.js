@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     /**
      * Object for caching lists of features.  Supports effecient queries for sub-range  (chr, start, end)
@@ -125,6 +126,8 @@ var igv = (function (igv) {
 
 
             // Now build interval tree for each chromosome
+
+            var i, chr;
 
             for (i = 0; i < chromosomes.length; i++) {
                 chr = chromosomes[i];

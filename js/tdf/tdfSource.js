@@ -30,6 +30,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.TDFSource = function (config) {
 

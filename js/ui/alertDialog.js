@@ -27,6 +27,7 @@
  * Created by turner on 4/29/15.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.AlertDialog = function ($parent, id) {
 

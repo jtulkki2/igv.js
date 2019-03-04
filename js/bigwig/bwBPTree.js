@@ -29,6 +29,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     var BPTREE_MAGIC_LTH = 0x78CA8C91;
     var BPTREE_MAGIC_HTL = 0x918CCA78;

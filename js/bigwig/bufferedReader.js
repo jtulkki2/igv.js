@@ -29,7 +29,7 @@
 
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.BufferedReader = function (config, contentLength, bufferSize) {
         this.path = config.url;

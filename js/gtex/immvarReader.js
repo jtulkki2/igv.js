@@ -27,6 +27,7 @@
 // http://immvar.broadinstitute.org:3000/load_data?chromosome=&start=&end=&categories=
 
 var igv = (function (igv) {
+    "use strict";
 
     /**
      * @param url - url to the webservice

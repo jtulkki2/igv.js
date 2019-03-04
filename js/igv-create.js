@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var igvjs_version = "beta";
     igv.version = igvjs_version;

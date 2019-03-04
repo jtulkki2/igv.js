@@ -26,7 +26,7 @@
 
 
 var igv = (function (igv) {
-
+    "use strict";
 
     igv.PairedAlignment = function (firstAlignment) {
 

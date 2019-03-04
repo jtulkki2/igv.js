@@ -27,6 +27,7 @@
  * Created by turner on 2/17/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.isBlank = function (line) {
 

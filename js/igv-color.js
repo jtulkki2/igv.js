@@ -27,6 +27,7 @@
  * Created by turner on 2/24/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.hex2Color = function (hex) {
 
@@ -264,7 +265,7 @@ var igv = (function (igv) {
     //
     // inspired by http://martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically/
 
-    RColor = function () {
+    function RColor() {
         this.hue = Math.random(),
             this.goldenRatio = 0.618033988749895;
         this.hexwidth = 2;

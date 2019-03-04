@@ -27,6 +27,7 @@
  * Created by turner on 2/11/14.
  */
 var igv = (function (igv) {
+    "use strict";
 
     igv.WIGTrack = function (config) {
 

@@ -35,6 +35,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     var BLACK = 1;
     var RED = 2;

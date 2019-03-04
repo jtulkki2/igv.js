@@ -30,7 +30,7 @@
 
 
 var igv = (function (igv) {
-
+    "use strict";
 
     var GZIP_FLAG = 0x1;
 

@@ -24,6 +24,7 @@
  */
 
 var igvxhr = (function (igvxhr) {
+    "use strict";
 
     // Compression types
     const NONE = 0;

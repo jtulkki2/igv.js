@@ -26,6 +26,7 @@
 // Indexed fasta files
 
 var igv = (function (igv) {
+    "use strict";
 
     igv.FastaSequence = function (reference) {
 

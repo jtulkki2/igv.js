@@ -24,6 +24,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     /**
      *
@@ -84,7 +85,7 @@ var igv = (function (igv) {
 
                 var indexedFileTS = parser.getLong();
                 var indexedFileMD5 = parser.getString();
-                flags = parser.getInt();
+                var flags = parser.getInt();
                 if (version < 3 && (flags & SEQUENCE_DICTIONARY_FLAG) == SEQUENCE_DICTIONARY_FLAG) {
                     // readSequenceDictionary(dis);
                 }

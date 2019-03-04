@@ -29,6 +29,7 @@
  */
 
 var igv = (function (igv) {
+    "use strict";
 
     var transcriptTypes;
     var cdsTypes;
@@ -239,7 +240,7 @@ var igv = (function (igv) {
 
     }
 
-    GFFTranscript = function (feature) {
+    function GFFTranscript(feature) {
         Object.assign(this, feature);
         this.exons = [];
         this.attributeString = feature.attributeString;

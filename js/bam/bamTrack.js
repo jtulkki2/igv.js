@@ -25,6 +25,7 @@
 
 
 var igv = (function (igv) {
+    "use strict";
 
     var alignmentRowYInset = 0;
     var alignmentStartGap = 5;
@@ -336,7 +337,7 @@ var igv = (function (igv) {
     }
 
 
-    CoverageTrack = function (config, parent) {
+    function CoverageTrack(config, parent) {
 
         this.parent = parent;
         this.featureSource = parent.featureSource;
@@ -440,7 +441,7 @@ var igv = (function (igv) {
                     });
                 }
                 if (item.posDel > 0 || item.negDel > 0) {
-                    hh = Math.round(((item.posDel + item.negDel) / this.dataRange.max) * this.height);
+                    var hh = Math.round(((item.posDel + item.negDel) / this.dataRange.max) * this.height);
                     y = this.height - hh - h;
                     igv.graphics.setProperties(ctx, {fillStyle: "#ddd"});
                     igv.graphics.fillRect(ctx, x, y, w, hh);
@@ -464,7 +465,7 @@ var igv = (function (igv) {
 
         if (coverage) {
 
-            var total = coverage.total + coverage.posDel + coverage.negDel;
+            var tmp, total = coverage.total + coverage.posDel + coverage.negDel;
 
             nameValues.push(igv.browser.referenceFrame.chr + ":" + igv.numberFormatter(1 + genomicLocation));
 
@@ -515,7 +516,7 @@ var igv = (function (igv) {
     };
 
 
-    AlignmentTrack = function (config, parent) {
+    function AlignmentTrack(config, parent) {
 
         this.parent = parent;
         this.featureSource = parent.featureSource;
@@ -723,6 +724,7 @@ var igv = (function (igv) {
                     x,
                     y,
                     i,
+                    len,
                     yStrokedLine = yRect + alignmentHeight / 2;
 
                 if (block.gapType !== undefined && xBlockEnd !== undefined && lastBlockEnd !== undefined) {

@@ -27,6 +27,7 @@
 // Generic functions applicable to all track types
 
 var igv = (function (igv) {
+    "use strict";
 
     /**
      * Set defaults for properties applicable to all tracks.

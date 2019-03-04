@@ -27,7 +27,7 @@
 
 
 var igv = (function (igv) {
-
+    "use strict";
 
     const VARIANT = "VARIANT";
     const TRAIT = "TRAIT";
