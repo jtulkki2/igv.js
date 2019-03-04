@@ -414,6 +414,16 @@ var igv = (function (igv) {
         return String.fromCharCode(this.charCodeAt(index));
     };
 
+    SequenceArray.prototype.toString = function() {
+        var charCodes = new Array(this.length);
+        var i;
+
+        for (i = 0; i < this.length; i++) {
+            charCodes[i] = this.charCodeAt(i);
+        }
+        return String.fromCharCode.apply(null, charCodes);
+    };
+
     SequenceArray.prototype.subarray = function(start, end) {
         return new SequenceArray(this.data, end - start, this.offset + start);
     };
