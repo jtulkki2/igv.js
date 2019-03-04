@@ -176,6 +176,7 @@ var igvxhr = (function (igvxhr) {
                 var error = new Error(message);
 
                 error.extra = {'Request URL': url};
+                error.status = xhr.status;
                 if (reject) {
                     reject(error);
                 }

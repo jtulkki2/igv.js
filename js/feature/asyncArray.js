@@ -62,16 +62,34 @@ var asyncArray = (function (asyncArray) {
         }
 
         function readDataFromPages(pages, start, length) {
-            var data = new ArrayBuffer(length);
-            var view = new Uint8Array(data);
-
-            var promises = pages.map(function(page) {
-                return page.data.then(function(data) {
-                    copyBytes(view, new Uint8Array(data), page.start - start);
+            var dataPromises = pages.map(function(page) {
+                return page.data.catch(function(error) {
+                    // Catch 'Requested Range Not Satisfiable' error
+                    if (error.status === 416) {
+                        return null;
+                    }
+                    throw error;
                 });
             });
 
-            return Promise.all(promises).then(function() {
+            return Promise.all(dataPromises).then(function(datas) {
+                var dataEnd = start;
+
+                // Find the actual end of received data. This can be less then the requested range if the range
+                // goes past the end of the file, which happens sometimes.
+                pages.forEach(function(page, index) {
+                    if (datas[index]) {
+                        dataEnd = Math.max(dataEnd, page.start + datas[index].byteLength);
+                    }
+                });
+
+                var data = new ArrayBuffer(Math.min(length, dataEnd - start));
+                var view = new Uint8Array(data);
+
+                pages.forEach(function(page, index) {
+                    copyBytes(view, new Uint8Array(datas[index]), page.start - start);
+                });
+
                 return data;
             });
         }
