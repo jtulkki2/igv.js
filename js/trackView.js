@@ -682,7 +682,7 @@ var igv = (function (igv) {
                             if (undefined === genomicLocation) {
                                 return;
                             }
-                            if (null === trackView.tile) {
+                            if (!trackView.tile) {
                                 return;
                             }
                             xOrigin = Math.round(referenceFrame.toPixels((trackView.tile.startBP - referenceFrame.start)));

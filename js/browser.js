@@ -395,6 +395,9 @@ var igv = (function (igv) {
         var oldWidth = this.trackContainerWidth;
         var newWidth = this.trackContainerDiv.clientWidth;
 
+        if (!this.div.parentNode) {
+            return;
+        }
         if (newWidth !== oldWidth) {
             this.trackContainerWidth = newWidth;
             if (oldWidth != null) {
