@@ -189,6 +189,7 @@ var igv = (function (igv) {
                     json,
                     alignment,
                     jsonAlignment,
+                    blocks,
                     cigarDecoded,
                     alignments = [],
                     genome = igv.browser.genome,

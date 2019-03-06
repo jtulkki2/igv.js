@@ -388,7 +388,7 @@ var igv = (function (igv) {
             end.push(binaryParser.getInt());
         }
 
-        var nS = binaryParser.getInt();  // # of samples, ignored but should === nTracks
+        var np, dtrack, nS = binaryParser.getInt();  // # of samples, ignored but should === nTracks
 
         data = [];
         nt = nTracks;

@@ -97,7 +97,7 @@ var igv = (function (igv) {
     igv.AneuTrack.prototype.getSummary = function (chr, bpStart, bpEnd, continuation) {
         var me = this;
         var filtersummary = function (redlinedata) {
-            var summarydata = [];
+            var i, len, summarydata = [];
             //log("AneuTrack: getSummary for: " + JSON.stringify(me.featureSourceRed.url));
             for (i = 0, len = redlinedata.length; i < len; i++) {
                 var feature = redlinedata[i];
@@ -137,7 +137,7 @@ var igv = (function (igv) {
                 }
             };
 
-            afterload = {
+            var afterload = {
                 headers: self.config.headers, // http headers, not file header
                 tokens: self.config.tokens, // http headers, not file header
                 success: afterJsonLoaded,
@@ -215,6 +215,8 @@ var igv = (function (igv) {
 
     igv.AneuTrack.prototype.getColor = function (value) {
         var expected = 2;
+        var color;
+
         if (value < expected) {
             color = this.lowColor;
         } else if (value > expected) {
@@ -453,6 +455,7 @@ var igv = (function (igv) {
      * @returns {number}
      */
     igv.AneuTrack.prototype.computePixelHeight = function (features) {
+        var i, len, sample;
         // console.log("computePixelHeight");
         for (i = 0, len = features.length; i < len; i++) {
             sample = features[i].sample;

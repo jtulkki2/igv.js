@@ -756,6 +756,7 @@ var igv = (function (igv) {
             end,
             searchConfig,
             url,
+            r,
             result;
 
         // See if we're ready to respond to a search, if not just queue it up and return

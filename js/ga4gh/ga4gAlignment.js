@@ -75,8 +75,7 @@ var igv = (function (igv) {
 
         //this.flags = encodeFlags(json);
 
-
-        alignment = json.alignment;
+        var alignment = json.alignment;
         if (alignment) {
             this.mapped = true;
 
@@ -87,7 +86,7 @@ var igv = (function (igv) {
             this.strand = !(json.alignment.position.reverseStrand);
             this.mq = json.alignment.mappingQuality;
             //this.cigar = encodeCigar(json.alignment.cigar);
-            cigarDecoded = translateCigar(json.alignment.cigar);
+            var cigarDecoded = translateCigar(json.alignment.cigar);
 
             this.lengthOnRef = cigarDecoded.lengthOnRef;
 
@@ -227,7 +226,7 @@ var igv = (function (igv) {
 
     function translateCigar(cigar) {
 
-        var cigarUnit, opLen, opLtr,
+        var i, cigarUnit, opLen, opLtr,
             lengthOnRef = 0,
             cigarArray = [];
 
@@ -252,7 +251,7 @@ var igv = (function (igv) {
 
     function translateCigar(cigar) {
 
-        var cigarUnit, opLen, opLtr,
+        var i, cigarUnit, opLen, opLtr,
             lengthOnRef = 0,
             cigarArray = [];
 

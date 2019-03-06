@@ -434,7 +434,7 @@ var igv = (function (igv) {
 
             source.getSummary(chr, start, end, function (featureList) {
                 if (featureList) {
-                    len = featureList.length;
+                    var len = featureList.length;
                     //log(" -->- loaded: chrom " + chr + " with " + len + " summary features, drawing them");
                     drawFeatures(source, featureList, guichrom, guichrom.x, guichrom.y, bufferCtx, chrwidth, chrheight, maxLen, tracknr);
                     me.repaint();

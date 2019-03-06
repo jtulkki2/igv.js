@@ -90,7 +90,7 @@ var igv = (function (igv) {
 
     function computeStart(variant) {
         //Alleles
-        altTokens = variant.alternateBases.split(",");
+        var altTokens = variant.alternateBases.split(",");
 
         if (altTokens.length > 0) {
 
