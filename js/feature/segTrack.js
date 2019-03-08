@@ -199,17 +199,8 @@ var igv = (function (igv) {
             bpEnd = bpStart + pixelWidth * bpPerPixel + 1;
             xScale = bpPerPixel;
 
-            for (i = 0, len = featureList.length; i < len; i++) {
-                sample = featureList[i].sample;
-                if (!this.samples.hasOwnProperty(sample)) {
-                    this.samples[sample] = myself.sampleCount;
-                    this.sampleNames.push(sample);
-                    this.sampleCount++;
-                }
-            }
-
             // Sort samples by name
-            this.sampleNames.sort(compareSampleNames);
+            this.sampleNames = this.getSamples().slice().sort(compareSampleNames);
             this.samples = { };
             this.sampleNames.forEach(function(item, index) {
                 myself.samples[item] = index;
@@ -218,7 +209,7 @@ var igv = (function (igv) {
 
             checkForLog(featureList);
 
-            var sampleX = {};
+            var sampleIndex, sampleX = {};
 
             for (i = 0, len = featureList.length; i < len; i++) {
 
@@ -227,31 +218,36 @@ var igv = (function (igv) {
                 if (segment.end < bpStart) continue;
                 if (segment.start > bpEnd) break;
 
-                y = myself.samples[segment.sample] * sampleHeight + border;
-
-                value = segment.value;
-                if (!myself.isLog) {
-                    value = Math.log2(value / 2);
-                }
-
-                if (value < -0.1) {
-                    color = myself.negColorScale.getColor(value);
-                }
-                else if (value > 0.1) {
-                    color = myself.posColorScale.getColor(value);
-                }
-                else {
-                    color = "white";
-                }
-
                 px = Math.round((segment.start - bpStart) / xScale);
                 px1 = Math.round((segment.end - bpStart) / xScale);
-                pw = Math.max(1, px1 - px);
+                px1 = Math.max(px1, px + 1);
+
+                sampleIndex = Array.isArray(segment.sample) ? 0 : segment.sample;
+
                 // Avoid drawing rectangle if it is in the same pixel as the previous rectangle.
                 // This speeds up drawing on low zoom levels.
-                if (sampleX[segment.sample] == undefined || sampleX[segment.sample] < px1) {
-                    sampleX[segment.sample] = px1;
-                    igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
+                if (sampleX[sampleIndex] == undefined || sampleX[sampleIndex] < px1) {
+                    sampleX[sampleIndex] = px1;
+                    pw = Math.max(1, px1 - px);
+                    iterateSegment(segment, function(sample, value) {
+                        var y = myself.samples[sample] * sampleHeight + border;
+
+                        if (!myself.isLog) {
+                            value = Math.log2(value / 2);
+                        }
+
+                        if (value < -0.1) {
+                            color = myself.negColorScale.getColor(value);
+                        }
+                        else if (value > 0.1) {
+                            color = myself.posColorScale.getColor(value);
+                        }
+                        else {
+                            color = "white";
+                        }
+
+                        igv.graphics.fillRect(ctx, px, y, pw, sampleHeight - 2 * border, {fillStyle: color});
+                    });
                 }
 
             }
@@ -300,7 +296,28 @@ var igv = (function (igv) {
             }
             return 0;
         }
+
+        function iterateSegment(segment, callback) {
+            if (Array.isArray(segment.sample)) {
+                var i = 0;
+
+                for (i = 0; i < segment.sample.length; i++) {
+                    callback(segment.sample[i], segment.value[i]);
+                }
+            } else {
+                callback(segment.sample, segment.value);
+            }
+        }
     };
+
+    igv.SegTrack.prototype.getSamples = function () {
+        var header = this.featureSource.reader.header;
+
+        if (header && header.samples) {
+            return header.samples;
+        }
+        return [];
+    }
 
     /**
      * Optional method to compute pixel height to accomodate the list of features.  The implementation below
@@ -314,16 +331,7 @@ var igv = (function (igv) {
         var i, len, sample,
             sampleHeight = ("SQUISHED" === this.displayMode) ? this.sampleSquishHeight : this.sampleExpandHeight;
 
-        for (i = 0, len = features.length; i < len; i++) {
-            sample = features[i].sample;
-            if (!this.samples.hasOwnProperty(sample)) {
-                this.samples[sample] = this.sampleCount;
-                this.sampleNames.push(sample);
-                this.sampleCount++;
-            }
-        }
-
-        return this.sampleCount * sampleHeight;
+        return this.getSamples().length * sampleHeight;
     };
 
     /**
@@ -440,7 +448,9 @@ var igv = (function (igv) {
                 var chr = igv.browser.referenceFrame.chr;  // TODO -- this should be passed in
                 var featureList = this.featureSource.featureCache.queryFeatures(chr, genomicLocation, genomicLocation);
                 featureList.forEach(function (f) {
-                    if (f.sample === sampleName) {
+                    if (Array.isArray(f.sample)) {
+                        items.push({name: "Value", value: f.value[f.sample.indexOf(sampleName)]});
+                    } else if (f.sample === sampleName) {
                         items.push({name: "Value", value: f.value});
                     }
                 });

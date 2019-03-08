@@ -75,6 +75,8 @@ var igv = (function (igv) {
 
         var lines = data ? data.splitLines() : [] ,
             len = lines.length,
+            sample,
+            allSamples = { },
             tokens, allFeatures = [], line, i, dataColumn;
 
         if (!this.header) {
@@ -90,9 +92,10 @@ var igv = (function (igv) {
             tokens = lines[i].split("\t");
 
             if (tokens.length > dataColumn) {
-
+                sample = tokens[sampleColumn];
+                allSamples[sample] = sample;
                 allFeatures.push({
-                    sample: tokens[sampleColumn],
+                    sample: sample,
                     chr: fixChromosome(tokens[chrColumn]),
                     start: parseInt(tokens[startColumn]),
                     end: parseInt(tokens[endColumn]),
@@ -100,6 +103,8 @@ var igv = (function (igv) {
                 });
             }
         }
+
+        this.header.samples = Object.keys(allSamples);
 
         return allFeatures;
 

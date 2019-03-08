@@ -89,15 +89,13 @@ var igv = (function (igv) {
             tokens = lines[i].split("\t");
 
             if (tokens.length == 3 + samples.length) {
-                for (j = 0; j < samples.length; j++) {
-                    allFeatures.push({
-                        sample: samples[j],
-                        chr: fixChromosome(tokens[chrColumn]),
-                        start: parseInt(tokens[startColumn]),
-                        end: parseInt(tokens[endColumn]),
-                        value: parseValue(tokens[3 + j])
-                    });
-                }
+                allFeatures.push({
+                    sample: samples,
+                    chr: fixChromosome(tokens[chrColumn]),
+                    start: parseInt(tokens[startColumn]),
+                    end: parseInt(tokens[endColumn]),
+                    value: tokens.slice(3).map(parseValue)
+                });
             }
         }
 
