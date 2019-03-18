@@ -144,7 +144,7 @@ var igv = (function (igv) {
                                         blockMax = endBlock;
                                     }
                                     if (j >= 0 && j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
-                                        linearEndBlock[j] = startBlock + 65536;
+                                        linearEndBlock[j] = startBlock;
                                     }
                                 }
                             }
@@ -220,7 +220,7 @@ var igv = (function (igv) {
                     offset: ba.linearStartOffset[minLin]
                 },
                 maxv: {
-                    block: ba.linearEndBlock[maxLin],
+                    block: ba.linearEndBlock[maxLin] + 65536,
                     offset: 0
                 }
             });
