@@ -683,14 +683,9 @@ var igv = (function (igv) {
 
         var centerBP;
 
-        console.log('browser.zoomIn - src extent ' + basesExtent(this.trackViewportWidth(), this.referenceFrame.bpPerPixel));
-
         // Have we reached the zoom-in threshold yet? If so, bail.
         if (this.minimumBasesExtent() > basesExtent(this.trackViewportWidth(), this.referenceFrame.bpPerPixel / 2.0)) {
-            console.log('browser.zoomIn - dst extent ' + basesExtent(this.trackViewportWidth(), this.referenceFrame.bpPerPixel / 2.0) + ' bailing ...');
             return;
-        } else {
-            console.log('browser.zoomIn - dst extent ' + basesExtent(this.trackViewportWidth(), this.referenceFrame.bpPerPixel / 2.0));
         }
 
         // window center (base-pair units)
