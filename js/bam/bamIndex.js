@@ -143,7 +143,7 @@ var igv = (function (igv) {
                                     if (endBlock > blockMax) {
                                         blockMax = endBlock;
                                     }
-                                    if (j >= 0 && j < linearEndBlock.length && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
+                                    if (j >= 0 && j < nintv && (!linearEndBlock[j] || startBlock < linearEndBlock[j])) {
                                         linearEndBlock[j] = startBlock;
                                     }
                                 }
@@ -151,16 +151,18 @@ var igv = (function (igv) {
                         }
                         parser.position = endPosition;
 
-                        if (linearEndBlock.length > 0) {
-                            linearEndBlock[linearEndBlock.length - 1] = blockMax;
-                            for (i = linearEndBlock.length - 2; i >= 0; i--) {
+                        if (nbin > 0 && nintv > 0) {
+                            linearEndBlock[nintv - 1] = blockMax;
+                            for (i = nintv - 2; i >= 0; i--) {
                                 if (!linearEndBlock[i]) {
                                     linearEndBlock[i] = linearEndBlock[i + 1];
                                 }
+                                if (!linearStartBlock[i]) {
+                                    linearStartBlock[i] = linearStartBlock[i + 1];
+                                    linearStartOffset[i] = linearStartOffset[i + 1];
+                                }
                             }
-                        }
 
-                        if (nbin > 0) {
                             indices[ref] = {
                                 linearStartOffset: linearStartOffset,
                                 linearStartBlock: linearStartBlock,
@@ -214,6 +216,9 @@ var igv = (function (igv) {
             minLin = Math.min(min >> 14, length - 1);
             maxLin = Math.min(max >> 14, length - 1);
 
+            if (ba.linearStartBlock[minLin] === 0) {
+                return intChunks;
+            }
             intChunks.push({
                 minv: {
                     block: ba.linearStartBlock[minLin],
