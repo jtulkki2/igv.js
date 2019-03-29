@@ -157,7 +157,7 @@ var igv = (function (igv) {
                                 if (!linearEndBlock[i]) {
                                     linearEndBlock[i] = linearEndBlock[i + 1];
                                 }
-                                if (!linearStartBlock[i]) {
+                                if (!linearStartBlock[i] && !linearStartOffset[i]) {
                                     linearStartBlock[i] = linearStartBlock[i + 1];
                                     linearStartOffset[i] = linearStartOffset[i + 1];
                                 }
@@ -216,7 +216,7 @@ var igv = (function (igv) {
             minLin = Math.min(min >> 14, length - 1);
             maxLin = Math.min(max >> 14, length - 1);
 
-            if (ba.linearStartBlock[minLin] === 0) {
+            if (!ba.linearStartBlock[minLin] && !ba.linearStartOffset[minLin]) {
                 return intChunks;
             }
             intChunks.push({
