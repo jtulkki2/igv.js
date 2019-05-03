@@ -417,7 +417,7 @@ var igv = (function (igv) {
             }
 
             function onDragEnd() {
-                if (!track.trackView || !track.trackView.tile || track.displayMode === "SQUISHED") {
+                if (!track.trackView || track.displayMode === "SQUISHED") {
                     return;
                 }
                 track.trackView.repaintViews();

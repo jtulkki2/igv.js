@@ -2178,75 +2178,12 @@ var igv = (function (igv) {
         $(this.root).on('mouseup', mouseUpOrLeave);
         $(this.root).on('mouseleave', mouseUpOrLeave);
 
-        $(this.trackContainerDiv).on('mousemove', handleMouseMove);
-
-        $(this.trackContainerDiv).on('touchmove', handleMouseMove);
-
         $(this.trackContainerDiv).on('mouseleave', mouseUpOrLeave);
 
         $(this.trackContainerDiv).on('mouseup', mouseUpOrLeave);
 
         $(this.trackContainerDiv).on('touchend', mouseUpOrLeave);
 
-        function handleMouseMove(e) {
-
-            var coords, viewport, viewportWidth, referenceFrame;
-
-            e.preventDefault();
-
-
-            if (self.loadInProgress()) {
-                return;
-            }
-
-            coords = igv.pageCoordinates(e);
-
-            if (self.vpMouseDown) {
-
-                // Determine direction,  true == horizontal
-                const horizontal = Math.abs((coords.x - self.vpMouseDown.mouseDownX)) > Math.abs((coords.y - self.vpMouseDown.mouseDownY));
-
-                viewport = self.vpMouseDown.viewport;
-                viewportWidth = viewport.$viewport.width();
-                referenceFrame = viewport.genomicState.referenceFrame;
-
-                if (!self.isDragging && !self.isScrolling) {
-                    if (horizontal) {
-                        if (self.vpMouseDown.mouseDownX && Math.abs(coords.x - self.vpMouseDown.mouseDownX) > self.constants.dragThreshold) {
-                            self.isDragging = true;
-                        }
-                    }
-                    else {
-                        if (self.vpMouseDown.mouseDownY &&
-                            Math.abs(coords.y - self.vpMouseDown.mouseDownY) > self.constants.scrollThreshold) {
-                            self.isScrolling = true;
-                            const trackView = viewport.trackView;
-                            const viewportContainerHeight = trackView.$viewportContainer.height();
-                            const contentHeight = trackView.maxContentHeight();
-                            self.vpMouseDown.r = viewportContainerHeight / contentHeight;
-                        }
-                    }
-                }
-
-                if (self.isDragging) {
-
-                    referenceFrame.shiftPixels(self.vpMouseDown.lastMouseX - coords.x, viewportWidth);
-                    self.updateLocusSearchWidget(self.vpMouseDown.genomicState);
-                    self.updateViews();
-                    self.fireEvent('trackdrag');
-                }
-
-
-                if (self.isScrolling) {
-                    const delta = self.vpMouseDown.r * (self.vpMouseDown.lastMouseY - coords.y);
-                    self.vpMouseDown.viewport.trackView.scrollBy(delta);
-                }
-
-
-                self.vpMouseDown.lastMouseX = coords.x;
-                self.vpMouseDown.lastMouseY = coords.y
-            }
-        }
 
         function mouseUpOrLeave(e) {
             self.cancelTrackPan();

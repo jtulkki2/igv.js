@@ -760,21 +760,11 @@ var igv = (function (igv) {
 
         });
 
+        this.$viewport.on('mousedown', handleMouseDown);
 
-        /**
-         * Mouse click down,  notify browser for potential drag (pan), and record position for potential click.
-         */
-        this.$viewport.on('mousedown', function (e) {
-            self.enableClick = true;
-            browser.mouseDownOnViewport(e, self);
-            mouseDownCoords = igv.pageCoordinates(e);
-        });
+        this.$viewport.on('touchstart', handleMouseDown);
 
-        this.$viewport.on('touchstart', function (e) {
-            self.enableClick = true;
-            browser.mouseDownOnViewport(e, self);
-            mouseDownCoords = igv.pageCoordinates(e);
-        });
+        this.$viewport.on('wheel', handleWheel);
 
         /**
          * Mouse is released.  Ignore if this is a context menu click, or the end of a drag action.   If neither of
@@ -785,26 +775,83 @@ var igv = (function (igv) {
         this.$viewport.on('touchend', handleMouseUp);
 
         this.$viewport.on('click', function (e) {
-            if (self.enableClick) {
-                handleClick(e);
-            }
+            handleClick(e);
         });
+
+        function handleMouseDown(e) {
+            const trackView = self.trackView;
+            const viewportContainerHeight = trackView.$viewportContainer.height();
+            const contentHeight = trackView.maxContentHeight();
+            const r = viewportContainerHeight / contentHeight;
+            const startCoords = igv.pageCoordinates(e);
+            let lastMouseX = startCoords.x;
+            let lastMouseY = startCoords.y;
+
+            self.enableClick = true;
+            if (browser.loadInProgress()) {
+                return;
+            }
+            igv.grabMouse({
+                event: e,
+                dragThresholdX: browser.constants.dragThreshold,
+                dragThresholdY: browser.constants.scrollThreshold,
+                onHorizontalDrag: handleDrag,
+                onVerticalDrag: handleScroll,
+                onEnd: handleDragEnd,
+                overlayClass: 'igv-grabbing-cursor'
+            });
+
+            function handleDrag(e) {
+                const coords = igv.pageCoordinates(e);
+
+                dragFrame(lastMouseX - coords.x);
+                lastMouseX = coords.x;
+            }
+
+            function handleScroll(e) {
+                const coords = igv.pageCoordinates(e);
+                const delta = r * (lastMouseY - coords.y);
+
+                self.trackView.scrollBy(delta);
+                lastMouseY = coords.y;
+            }
+        }
+
+        function handleWheel(e) {
+            var event = e.originalEvent;
+            const trackView = self.trackView;
+            const viewportContainerHeight = trackView.$viewportContainer.height();
+            const contentHeight = trackView.maxContentHeight();
+            const r = viewportContainerHeight / contentHeight;
+
+            if (browser.loadInProgress()) {
+                // ignore
+                return;
+            }
+            dragFrame(event.deltaX);
+            self.trackView.scrollBy(event.deltaY * r);
+
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
+        function dragFrame(change) {
+            const viewportWidth = self.$viewport.width();
+            const referenceFrame = self.genomicState.referenceFrame;
+
+            referenceFrame.shiftPixels(change, viewportWidth);
+            browser.updateLocusSearchWidget(self.genomicState);
+            browser.updateViews();
+            browser.fireEvent('trackdrag');
+
+        }
+
+        function handleDragEnd(e) {
+            browser.fireEvent('trackdragend');
+        }
 
         function handleMouseUp(e) {
 
-
-            // Any mouse up cancels drag and scrolling
-            if (self.browser.isDragging || self.browser.isScrolling) {
-                self.browser.cancelTrackPan();
-                e.preventDefault();
-                e.stopPropagation();
-
-                self.enableClick = false;   // Until next mouse down
-
-                return;
-            }
-
-            self.browser.cancelTrackPan();
             self.browser.endTrackDrag();
         }
 
@@ -816,11 +863,6 @@ var igv = (function (igv) {
 
             // Close any currently open popups
             $('.igv-popover').hide();
-
-
-            if (browser.isDragging || browser.isScrolling) {
-                return;
-            }
 
             // // Interpret mouseDown + mouseUp < 5 pixels as a click.
             // if(!mouseDownCoords) {

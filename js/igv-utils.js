@@ -605,6 +605,101 @@ var igv = (function (igv) {
 
     }
 
+    /*
+     * Grabs mouse events until the button is released. options parameter accepts the
+     * following properties:
+     *
+     * event            the original mouse down event
+     * overlayClass     additional class name for the transparent overlay used while dragging (optional)
+     * cursor           mouse cursor used while dragging (optional)
+     * dragThresholdX   horizontal drag threshold (optional)
+     * dragThresholdY   vertical drag threshold (optional)
+     * onDrag           event handler called when dragging in any direction (optional)
+     * onHorizontalDrag event handler called when dragging horizontally (optional)
+     * onVerticalDrag   event handler called when dragging vertically (optional)
+     * onEnd            event handler called when dragging ends (optional)
+     *
+     * @param options
+     */
+    igv.grabMouse = function(options) {
+        let dragging = false;
+        let draggingHorizontally = false;
+        let draggingVertically = false;
+        let overlay = null;
+        const useTouch = options.event.type === 'touchstart';
+        const startCoords = igv.pageCoordinates(options.event);
+
+        $(window).on('mousemove', handleMouseMove);
+        $(window).on('touchmove', handleMouseMove);
+        $(window).on('mouseup', handleMouseUp);
+        $(window).on('touchend', handleMouseUp);
+
+        if (!options.dragThresholdX || !options.dragThresholdY) {
+            startDragging();
+        }
+
+        function startDragging() {
+            overlay = document.createElement('div');
+            overlay.className = 'igv-grab-overlay' + (options.overlayClass ? ' ' + options.overlayClass : '');
+            if (options.cursor) {
+                overlay.style.cursor = options.cursor;
+            }
+
+            // Add transparent overlay to catch mouse events even if there are iframes in the page.
+            document.body.appendChild(overlay);
+            dragging = true;
+        }
+
+        function handleMouseMove(event) {
+            const coords = igv.pageCoordinates(event);
+
+            if (!dragging) {
+                const dx = Math.abs(coords.x - startCoords.x);
+                const dy = Math.abs(coords.y - startCoords.y);
+                const horizontal = dx > dy;
+
+                if (horizontal) {
+                    if (Math.abs(dx) > options.dragThresholdX) {
+                        startDragging();
+                        draggingHorizontally = true;
+                    }
+                } else {
+                    if (Math.abs(dy) > options.dragThresholdY) {
+                        startDragging();
+                        draggingVertically = true;
+                    }
+                }
+            }
+
+            // Check if the button has been released. This can happen if for some reason we miss the mouse up event.
+            if (!useTouch && (event.buttons === 0 || event.which === 0)) {
+                handleMouseUp(event);
+            } else if (dragging) {
+                if (options.onDrag) {
+                    options.onDrag(event);
+                }
+                if (options.onHorizontalDrag && draggingHorizontally) {
+                    options.onHorizontalDrag(event);
+                }
+                if (options.onVerticalDrag && draggingVertically) {
+                    options.onVerticalDrag(event);
+                }
+            }
+        }
+
+        function handleMouseUp(event) {
+            if (overlay) {
+                document.body.removeChild(overlay);
+            }
+            $(window).off('mousemove', handleMouseMove);
+            $(window).off('touchmove', handleMouseMove);
+            $(window).off('mouseup', handleMouseUp);
+            $(window).off('touchend', handleMouseUp);
+            if (options.onEnd) {
+                options.onEnd(event);
+            }
+        }
+    };
 
     return igv;
 

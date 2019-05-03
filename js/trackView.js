@@ -606,7 +606,7 @@ var igv = (function (igv) {
 
         if (this.scrollbar) {
             const currentTop = this.viewports[0].getContentTop();
-            const newTop =  Math.min(0, minContentHeight(this.viewports) - this.$viewportContainer.height());
+            const newTop =  -Math.max(0, maxHeight - this.$viewportContainer.height());
             if(currentTop < newTop) {
                 this.viewports.forEach(function (viewport) {
                     $(viewport.contentDiv).css("top", newTop + "px");
@@ -736,7 +736,6 @@ var igv = (function (igv) {
     const TrackScrollbar = function ($viewportContainer, viewports, rootDiv) {
 
         const self = this;
-        let lastY;
 
         const guid = igv.guid();
         const namespace = '.trackscrollbar' + guid;
@@ -768,31 +767,25 @@ var igv = (function (igv) {
             event.preventDefault();
 
             const page = igv.pageCoordinates(event);
+            let lastY = page.y;
 
-            lastY = page.y;
-
-            $(document).on('mousemove' + namespace, mouseMove);
-            $(document).on('mouseup' + namespace, mouseUp);
-            $(document).on('mouseleave' + namespace, mouseUp);
+            igv.grabMouse({
+                event: event.originalEvent,
+                onDrag: drag
+            });
 
             // prevents start of horizontal track panning)
             event.stopPropagation();
+
+            function drag(event) {
+
+                const page = igv.pageCoordinates(event);
+                self.moveScrollerBy(page.y - lastY);
+                lastY = page.y;
+
+            }
         }
 
-        function mouseMove(event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            const page = igv.pageCoordinates(event);
-            self.moveScrollerBy(page.y - lastY);
-            lastY = page.y;
-
-        }
-
-        function mouseUp(event) {
-            $(document).off(self.namespace);
-        }
 
     };
 

@@ -1164,16 +1164,16 @@
   border-right-width: thin; }
 
 .igv-center-guide-wide {
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   border-left-color: rgba(127, 127, 127, 0.51);
   border-right-color: rgba(127, 127, 127, 0.51); }
 
 .igv-center-guide-thin {
   left: 50%;
   width: 1px;
-  background-color: rgba(0, 0, 0, 0);
+  background-color: transparent;
   border-left-color: rgba(127, 127, 127, 0.51);
-  border-right-color: rgba(0, 0, 0, 0);
+  border-right-color: transparent;
   /*background-color: rgba(127, 127, 127, 0.51);*/
   /*border-left-color: rgba(0,0,0,0);*/
   /*border-right-color: rgba(0,0,0,0);*/ }
@@ -1250,5 +1250,17 @@
   padding: 0;
   border: 0;
   display: block; }
+
+.igv-grab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000; }
+
+.igv-grabbing-cursor {
+  cursor: grabbing;
+  cursor: -webkit-grabbing; }
 
 /*# sourceMappingURL=igv.css.map */

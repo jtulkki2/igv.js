@@ -1109,3 +1109,17 @@ $igv-trackgear-default-font-face: 'Open Sans', sans-serif;
   border: 0;
   display: block;
 }
+
+.igv-grab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.igv-grabbing-cursor {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
