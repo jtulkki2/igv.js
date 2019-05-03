@@ -17,6 +17,7 @@
         root.igv = factory();
     }
  }(this, function () {
+    "use strict";
 //
 //     // Just return a value to define the module export.
 //     // This example returns an object, but the module
